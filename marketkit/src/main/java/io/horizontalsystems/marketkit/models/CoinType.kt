@@ -12,6 +12,10 @@ sealed class CoinType : Parcelable {
     object Litecoin : CoinType()
     @Parcelize
     object Dash : CoinType()
+
+    @Parcelize
+    object Safe : CoinType()
+
     @Parcelize
     object Zcash : CoinType()
     @Parcelize
@@ -59,6 +63,7 @@ sealed class CoinType : Parcelable {
             is BitcoinCash -> "bitcoinCash"
             is Litecoin -> "litecoin"
             is Dash -> "dash"
+            is Safe -> "safe-coin"
             is Zcash -> "zcash"
             is Ethereum -> "ethereum"
             is BinanceSmartChain -> "binanceSmartChain"
@@ -94,6 +99,7 @@ sealed class CoinType : Parcelable {
         BitcoinCash -> "bitcoinCash"
         Litecoin -> "litecoin"
         Dash -> "dash"
+        Safe -> "safe-coin"
         Zcash -> "zcash"
         Ethereum -> "ethereum"
         BinanceSmartChain -> "binanceSmartChain"
@@ -122,6 +128,7 @@ sealed class CoinType : Parcelable {
             "bitcoin-cash" -> BitcoinCash
             "litecoin" -> Litecoin
             "dash" -> Dash
+            "safe-coin" -> Safe
             "zcash" -> Zcash
             "ethereum" -> Ethereum
             "binance-smart-chain" -> BinanceSmartChain
@@ -153,6 +160,7 @@ sealed class CoinType : Parcelable {
                     "bitcoinCash" -> BitcoinCash
                     "litecoin" -> Litecoin
                     "dash" -> Dash
+                    "safe-coin" -> Safe
                     "zcash" -> Zcash
                     "ethereum" -> Ethereum
                     "binanceSmartChain" -> BinanceSmartChain
