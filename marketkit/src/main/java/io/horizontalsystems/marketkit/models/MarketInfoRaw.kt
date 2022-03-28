@@ -26,4 +26,6 @@ data class MarketInfoRaw(
     val athPercentage: BigDecimal?,
     @SerializedName("atl_percentage")
     val atlPercentage: BigDecimal?,
+    @SerializedName("all_platforms")
+    val platforms: List<PlatformResponse>?,
 )

@@ -1,15 +1,20 @@
 package io.horizontalsystems.marketkit.providers
 
+import com.google.gson.annotations.SerializedName
+import io.horizontalsystems.marketkit.chart.HsChartRequestHelper
 import io.horizontalsystems.marketkit.models.*
 import io.reactivex.Single
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
+import java.math.BigDecimal
+import java.util.*
 
 class HsProvider(baseUrl: String, apiKey: String) {
 
     private val service by lazy {
-        RetrofitUtils.build("${baseUrl}/v1/", mapOf("apikey" to apiKey)).create(MarketService::class.java)
+        RetrofitUtils.build("${baseUrl}/v1/", mapOf("apikey" to apiKey))
+            .create(MarketService::class.java)
     }
 
     fun getFullCoins(page: Int, limit: Int): Single<List<FullCoin>> {
@@ -19,7 +24,11 @@ class HsProvider(baseUrl: String, apiKey: String) {
             }
     }
 
-    fun marketInfosSingle(top: Int, currencyCode: String, defi: Boolean): Single<List<MarketInfoRaw>> {
+    fun marketInfosSingle(
+        top: Int,
+        currencyCode: String,
+        defi: Boolean
+    ): Single<List<MarketInfoRaw>> {
         return service.getMarketInfos(top, currencyCode, defi)
     }
 
@@ -27,7 +36,10 @@ class HsProvider(baseUrl: String, apiKey: String) {
         return service.getAdvancedMarketInfos(top, currencyCode)
     }
 
-    fun marketInfosSingle(coinUids: List<String>, currencyCode: String): Single<List<MarketInfoRaw>> {
+    fun marketInfosSingle(
+        coinUids: List<String>,
+        currencyCode: String
+    ): Single<List<MarketInfoRaw>> {
         return service.getMarketInfos(coinUids.joinToString(","), currencyCode)
     }
 
@@ -48,6 +60,28 @@ class HsProvider(baseUrl: String, apiKey: String) {
             }
     }
 
+    fun historicalCoinPriceSingle(
+        coinUid: String,
+        currencyCode: String,
+        timestamp: Long
+    ): Single<HistoricalCoinPriceResponse> {
+        return service.getHistoricalCoinPrice(coinUid, currencyCode, timestamp)
+    }
+
+    fun coinPriceChartSingle(
+        coinUid: String,
+        currencyCode: String,
+        interval: HsTimePeriod,
+        indicatorPoints: Int
+    ): Single<List<ChartCoinPriceResponse>> {
+        val currentTime = Date().time / 1000
+        val fromTimestamp =
+            HsChartRequestHelper.fromTimestamp(currentTime, interval, indicatorPoints)
+        val pointInterval = HsChartRequestHelper.pointInterval(interval).value
+
+        return service.getCoinPriceChart(coinUid, currencyCode, fromTimestamp, pointInterval)
+    }
+
     fun getMarketInfoOverview(
         coinUid: String,
         currencyCode: String,
@@ -58,15 +92,9 @@ class HsProvider(baseUrl: String, apiKey: String) {
 
     fun getGlobalMarketPointsSingle(
         currencyCode: String,
-        timePeriod: TimePeriod,
+        timePeriod: HsTimePeriod,
     ): Single<List<GlobalMarketPoint>> {
-        val interval = when (timePeriod) {
-            TimePeriod.Day7 -> "7d"
-            TimePeriod.Day30 -> "30d"
-            else -> "1d"
-        }
-
-        return service.globalMarketPoints(interval, currencyCode)
+        return service.globalMarketPoints(timePeriod.value, currencyCode)
     }
 
     fun defiMarketInfosSingle(currencyCode: String): Single<List<DefiMarketInfoResponse>> {
@@ -77,34 +105,35 @@ class HsProvider(baseUrl: String, apiKey: String) {
         return service.getMarketInfoDetails(coinUid, currency)
     }
 
-    fun marketInfoTvlSingle(coinUid: String, currencyCode: String, timePeriod: TimePeriod): Single<List<ChartPoint>> {
-        val interval = when (timePeriod) {
-            TimePeriod.Day7 -> "7d"
-            TimePeriod.Day30 -> "30d"
-            else -> "1d"
-        }
-        return service.getMarketInfoTvl(coinUid, currencyCode, interval).map { responseList ->
-            responseList.mapNotNull { it.tvl?.let { tvl -> ChartPoint(tvl, null, it.timestamp) } }
-        }
+    fun marketInfoTvlSingle(
+        coinUid: String,
+        currencyCode: String,
+        timePeriod: HsTimePeriod
+    ): Single<List<ChartPoint>> {
+        return service.getMarketInfoTvl(coinUid, currencyCode, timePeriod.value)
+            .map { responseList ->
+                responseList.mapNotNull {
+                    it.tvl?.let { tvl -> ChartPoint(tvl, it.timestamp, emptyMap()) }
+                }
+            }
     }
 
     fun marketInfoGlobalTvlSingle(
         chain: String,
         currencyCode: String,
-        timePeriod: TimePeriod
+        timePeriod: HsTimePeriod
     ): Single<List<ChartPoint>> {
-        val interval = when (timePeriod) {
-            TimePeriod.Day7 -> "7d"
-            TimePeriod.Day30 -> "30d"
-            else -> "1d"
-        }
 
         return service.getMarketInfoGlobalTvl(
             currencyCode,
-            interval,
+            timePeriod.value,
             chain = if (chain.isNotBlank()) chain else null
         ).map { responseList ->
-            responseList.mapNotNull { it.tvl?.let { tvl -> ChartPoint(tvl, null, it.timestamp) } }
+            responseList.mapNotNull {
+                it.tvl?.let { tvl ->
+                    ChartPoint(tvl, it.timestamp, emptyMap())
+                }
+            }
         }
     }
 
@@ -187,6 +216,21 @@ class HsProvider(baseUrl: String, apiKey: String) {
             @Query("fields") fields: String = coinPriceFields,
         ): Single<List<CoinPriceResponse>>
 
+        @GET("coins/{coinUid}/price_history")
+        fun getHistoricalCoinPrice(
+            @Path("coinUid") coinUid: String,
+            @Query("currency") currencyCode: String,
+            @Query("timestamp") timestamp: Long,
+        ): Single<HistoricalCoinPriceResponse>
+
+        @GET("coins/{coinUid}/price_chart")
+        fun getCoinPriceChart(
+            @Path("coinUid") coinUid: String,
+            @Query("currency") currencyCode: String,
+            @Query("from_timestamp") timestamp: Long,
+            @Query("interval") interval: String,
+        ): Single<List<ChartCoinPriceResponse>>
+
         @GET("coins/{coinUid}")
         fun getMarketInfoOverview(
             @Path("coinUid") coinUid: String,
@@ -249,10 +293,31 @@ class HsProvider(baseUrl: String, apiKey: String) {
         companion object {
             private const val marketInfoFields =
                 "name,code,price,price_change_24h,market_cap_rank,coingecko_id,market_cap,total_volume"
-            private const val fullCoinFields = "name,code,market_cap_rank,coingecko_id,platforms"
+            private const val fullCoinFields = "name,code,market_cap_rank,coingecko_id,all_platforms"
             private const val coinPriceFields = "price,price_change_24h,last_updated"
             private const val advancedMarketFields =
-                "price,market_cap,total_volume,price_change_24h,price_change_7d,price_change_14d,price_change_30d,price_change_200d,price_change_1y,ath_percentage,atl_percentage"
+                "all_platforms,price,market_cap,total_volume,price_change_24h,price_change_7d,price_change_14d,price_change_30d,price_change_200d,price_change_1y,ath_percentage,atl_percentage"
         }
     }
+}
+
+data class HistoricalCoinPriceResponse(
+    val timestamp: Long,
+    val price: BigDecimal,
+)
+
+data class ChartCoinPriceResponse(
+    val timestamp: Long,
+    val price: BigDecimal,
+    @SerializedName("volume")
+    val totalVolume: BigDecimal?
+) {
+    val chartPoint: ChartPoint
+        get() {
+            return ChartPoint(
+                price,
+                timestamp,
+                totalVolume?.let { mapOf(ChartPointType.Volume to it) } ?: emptyMap()
+            )
+        }
 }

@@ -4,8 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import io.horizontalsystems.marketkit.MarketKit
 import io.horizontalsystems.marketkit.models.ChartType
+import io.horizontalsystems.marketkit.models.HsTimePeriod
 import io.horizontalsystems.marketkit.models.PlatformType
-import io.horizontalsystems.marketkit.models.TimePeriod
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import java.text.SimpleDateFormat
@@ -84,15 +84,15 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
     }
 
     fun runGetChartInfo() {
-        val coinUid = "coin-oracle"
+        val coinUid = "ethereum"
         val currencyCode = "USD"
-        val chartType = ChartType.MONTHLY
+        val interval = HsTimePeriod.Month1
         //get stored chart info
-        val storedChartInfo = marketKit.chartInfo(coinUid, currencyCode, chartType)
+        val storedChartInfo = marketKit.chartInfo(coinUid, currencyCode, interval)
         Log.w("AAA", "storedChartInfo: ${storedChartInfo?.points}")
 
         //fetch chartInfo from API
-        marketKit.getChartInfoAsync(coinUid, currencyCode, chartType)
+        marketKit.getChartInfoAsync(coinUid, currencyCode, interval)
             .subscribeOn(Schedulers.io())
             .subscribe({
                 Log.w("AAA", "fetchChartInfo: ${it.points}")
@@ -201,7 +201,7 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
 
     fun runGlobalMarketPoints() {
         val currencyCode = "USD"
-        val timePeriod = TimePeriod.Hour24
+        val timePeriod = HsTimePeriod.Day1
         marketKit.globalMarketPointsSingle(currencyCode, timePeriod)
             .subscribeOn(Schedulers.io())
             .subscribe({
@@ -229,6 +229,26 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
                     }
             }, {
                 Log.e("AAA", "getMarketTickers Error", it)
+            })
+            .let {
+                disposables.add(it)
+            }
+    }
+
+    fun runGetMarketDefi() {
+        val currencyUsd = "usd"
+        marketKit.defiMarketInfosSingle(currencyUsd)
+            .subscribeOn(Schedulers.io())
+            .subscribe({
+                it
+                    .forEach {
+                        Log.w(
+                            "AAA",
+                            "getMarketDefi: ${it.name} tvl: ${it.tvl} tvlRank: ${it.tvlRank} tvlChange2W: ${it.tvlChange2W} chainTvls.size: ${it.chainTvls.size}"
+                        )
+                    }
+            }, {
+                Log.e("AAA", "getMarketDefi Error", it)
             })
             .let {
                 disposables.add(it)

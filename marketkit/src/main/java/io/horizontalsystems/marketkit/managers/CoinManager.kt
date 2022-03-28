@@ -69,16 +69,19 @@ class CoinManager(
                     .map { it.uid to it }
                     .toMap()
 
-                val performance = overviewRaw.performance
-                    .map { (vsCurrency, v) ->
-                        vsCurrency to v.mapNotNull { (timePeriodRaw, performance) ->
-                            if (performance == null) return@mapNotNull null
-                            val timePeriod =
-                                TimePeriod.fromString(timePeriodRaw) ?: return@mapNotNull null
+                val performance = overviewRaw.performance.map { (vsCurrency, v) ->
+                    vsCurrency to v.mapNotNull { (timePeriodRaw, performance) ->
+                        if (performance == null) return@mapNotNull null
 
-                            timePeriod to performance
-                        }.toMap()
+                        val timePeriod = when (timePeriodRaw) {
+                            "7d" -> HsTimePeriod.Week1
+                            "30d" -> HsTimePeriod.Month1
+                            else -> return@mapNotNull null
+                        }
+
+                        timePeriod to performance
                     }.toMap()
+                }.toMap()
 
                 val links = overviewRaw.links
                     .mapNotNull { (linkTypeRaw, link) ->
@@ -151,7 +154,7 @@ class CoinManager(
     fun marketInfoTvlSingle(
         coinUid: String,
         currencyCode: String,
-        timePeriod: TimePeriod
+        timePeriod: HsTimePeriod
     ): Single<List<ChartPoint>> {
         return hsProvider.marketInfoTvlSingle(coinUid, currencyCode, timePeriod)
     }
@@ -159,9 +162,9 @@ class CoinManager(
     fun marketInfoGlobalTvlSingle(
         chain: String,
         currencyCode: String,
-        timePeriod: TimePeriod
+        timePeriod: HsTimePeriod
     ): Single<List<ChartPoint>> {
-       return hsProvider.marketInfoGlobalTvlSingle(chain, currencyCode, timePeriod)
+        return hsProvider.marketInfoGlobalTvlSingle(chain, currencyCode, timePeriod)
     }
 
     fun topHoldersSingle(coinUid: String): Single<List<TokenHolder>> {

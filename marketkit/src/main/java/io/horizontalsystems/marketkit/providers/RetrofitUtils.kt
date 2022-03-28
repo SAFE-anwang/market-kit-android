@@ -20,7 +20,7 @@ object RetrofitUtils {
             Cache(it, HSCache.cacheQuotaBytes)
         }
         val loggingInterceptor = HttpLoggingInterceptor()
-        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BASIC)
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
 
         val headersInterceptor = Interceptor { chain ->
             val requestBuilder = chain.request().newBuilder()
@@ -36,7 +36,7 @@ object RetrofitUtils {
             .addInterceptor(loggingInterceptor)
             .addInterceptor(headersInterceptor)
 
-            .proxy(Proxy( Proxy.Type.HTTP , InetSocketAddress("47.89.208.160", 58972) ))
+//            .proxy(Proxy( Proxy.Type.HTTP , InetSocketAddress("47.89.208.160", 58972) ))
 
             .cache(cache)
             .build()

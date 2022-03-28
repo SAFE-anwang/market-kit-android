@@ -9,9 +9,14 @@ data class DefiMarketInfo(
     val tvl: BigDecimal,
     val tvlRank: Int,
     val tvlChange1D: BigDecimal?,
-    val tvlChange7D: BigDecimal?,
-    val tvlChange30D: BigDecimal?,
-    val chains: List<String>
+    val tvlChange1W: BigDecimal?,
+    val tvlChange2W: BigDecimal?,
+    val tvlChange1M: BigDecimal?,
+    val tvlChange3M: BigDecimal?,
+    val tvlChange6M: BigDecimal?,
+    val tvlChange1Y: BigDecimal?,
+    val chains: List<String>,
+    val chainTvls: Map<String, BigDecimal?>,
 ) {
     constructor(defiMarketInfoResponse: DefiMarketInfoResponse, fullCoin: FullCoin?) : this(
         fullCoin,
@@ -20,8 +25,13 @@ data class DefiMarketInfo(
         defiMarketInfoResponse.tvl,
         defiMarketInfoResponse.tvlRank,
         defiMarketInfoResponse.tvlChange1D,
-        defiMarketInfoResponse.tvlChange7D,
-        defiMarketInfoResponse.tvlChange30D,
-        defiMarketInfoResponse.chains
+        defiMarketInfoResponse.tvlChange1W,
+        defiMarketInfoResponse.tvlChange2W,
+        defiMarketInfoResponse.tvlChange1M,
+        defiMarketInfoResponse.tvlChange3M,
+        defiMarketInfoResponse.tvlChange6M,
+        defiMarketInfoResponse.tvlChange1Y,
+        defiMarketInfoResponse.chains,
+        defiMarketInfoResponse.chainTvls,
     )
 }
