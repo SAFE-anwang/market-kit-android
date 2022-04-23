@@ -5611,7 +5611,7 @@ INSERT INTO Coin VALUES('rug-busters','Rug Busters','RUGBUST',NULL,'rug-busters'
 INSERT INTO Coin VALUES('bittracksystems','BittrackSystems','BTTR',NULL,'bittracksystems');
 INSERT INTO Coin VALUES('timechain-swap-token','Timechain Swap Token','TCS',NULL,'timechain-swap-token');
 INSERT INTO Coin VALUES('safe-coin','Safe','SAFE',NULL,'safe-coin');
-INSERT INTO Coin VALUES('safe-erc20','Safe','SAFE',NULL,'safe-erc20');
+INSERT INTO Coin VALUES('custom_safe-erc20-SAFE','Safe','SAFE',NULL,'custom_safe-erc20-SAFE');
 INSERT INTO Coin VALUES('gold-poker','Gold Poker','GPKR',NULL,'gold-poker');
 INSERT INTO Coin VALUES('moonpump','MoonPump','PUMP',NULL,'moonpump');
 INSERT INTO Coin VALUES('sparkle','Sparkle Loyalty','SPRKL',NULL,'sparkle');
@@ -23874,4 +23874,4 @@ INSERT INTO Platform VALUES('erc20|0x1e4ede388cbc9f4b5c79681b7f94d36a11abebc9',1
 INSERT INTO Platform VALUES('bep20|0x475bfaa1848591ae0e6ab69600f48d828f61a80e',18,'everdome');
 INSERT INTO Platform VALUES('erc20|0xf59257e961883636290411c11ec5ae622d19455e',9,'floordao');
 INSERT INTO Platform VALUES('erc20|0x88800092ff476844f74dc2fc427974bbee2794ae',18,'ambire-wallet');
-INSERT INTO Platform VALUES('erc20|0x874A3d9a9655F18AFC59B0E75463Ea29EE2043C0',18,'safe-erc20');
+INSERT INTO Platform VALUES('erc20|0x874a3d9a9655f18afc59b0e75463ea29ee2043c0',18,'custom_safe-erc20-SAFE');
