@@ -1,9 +1,11 @@
 package io.horizontalsystems.marketkit.providers
 
+import android.util.Log
 import io.horizontalsystems.marketkit.managers.CoinPriceManager
 import io.horizontalsystems.marketkit.managers.ICoinPriceCoinUidDataSource
 import io.horizontalsystems.marketkit.models.CoinPrice
 import io.reactivex.Single
+import java.util.stream.Collectors
 
 interface ISchedulerProvider {
     val id: String
@@ -32,6 +34,14 @@ class CoinPriceSchedulerProvider(
     override val syncSingle: Single<Unit>
         get() = provider.getCoinPrices(coinUids, currencyCode)
             .doOnSuccess {
+                it.stream().forEach { item ->
+                   if (item.coinUid == "safe-coin") {
+                       val safeCoinPriceList = mutableListOf<CoinPrice>()
+                       // 本地新增safe-erc20市场价格
+                       safeCoinPriceList.add(CoinPrice("custom_safe-erc20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp))
+                       manager.handleUpdated(safeCoinPriceList, currencyCode)
+                   }
+                }
                 handle(it)
             }.map {}
 
@@ -45,4 +55,5 @@ class CoinPriceSchedulerProvider(
     private fun handle(updatedCoinPrices: List<CoinPrice>) {
         manager.handleUpdated(updatedCoinPrices, currencyCode)
     }
+
 }
