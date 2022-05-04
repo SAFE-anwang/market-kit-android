@@ -1,5 +1,6 @@
 package io.horizontalsystems.marketkit.managers
 
+import android.util.Log
 import io.horizontalsystems.marketkit.models.CoinPrice
 import io.horizontalsystems.marketkit.storage.CoinPriceStorage
 
@@ -40,8 +41,9 @@ class CoinPriceManager(
 
     fun coinPriceMap(coinUids: List<String>, currencyCode: String): Map<String, CoinPrice> {
         val coinPriceMap = mutableMapOf<String, CoinPrice>()
-
+//        Log.i("safe4", "coinUids: $coinUids currencyCode: $currencyCode")
         storage.coinPrices(coinUids, currencyCode).forEach { coinPrice ->
+//            Log.i("safe4", "coinPrice: $coinPrice")
             coinPriceMap[coinPrice.coinUid] = coinPrice
         }
 
