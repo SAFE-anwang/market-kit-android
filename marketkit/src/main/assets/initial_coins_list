@@ -23874,4 +23874,4 @@ INSERT INTO Platform VALUES('erc20|0x1e4ede388cbc9f4b5c79681b7f94d36a11abebc9',1
 INSERT INTO Platform VALUES('bep20|0x475bfaa1848591ae0e6ab69600f48d828f61a80e',18,'everdome');
 INSERT INTO Platform VALUES('erc20|0xf59257e961883636290411c11ec5ae622d19455e',9,'floordao');
 INSERT INTO Platform VALUES('erc20|0x88800092ff476844f74dc2fc427974bbee2794ae',18,'ambire-wallet');
-INSERT INTO Platform VALUES('erc20|0x874a3d9a9655f18afc59b0e75463ea29ee2043c0',18,'custom_safe-erc20-SAFE');
+INSERT INTO Platform VALUES('erc20|0xee9c1ea4dcf0aaf4ff2d78b6ff83aa69797b65eb',18,'custom_safe-erc20-SAFE');
