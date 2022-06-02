@@ -37,7 +37,7 @@ class CoinPriceSchedulerProvider(
                 it.stream().forEach { item ->
                    if (item.coinUid == "safe-coin") {
                        val safeCoinPriceList = mutableListOf<CoinPrice>()
-                       // 新增本地safe-erc20、safe-dep20市场价格
+                       // 新增本地safe-erc20、safe-bep20市场价格
                        safeCoinPriceList.add(CoinPrice("custom_safe-erc20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp))
                        safeCoinPriceList.add(CoinPrice("custom_safe-bep20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp))
                        manager.handleUpdated(safeCoinPriceList, currencyCode)
