@@ -3,6 +3,7 @@ package io.horizontalsystems.marketkit.models
 import com.google.gson.annotations.SerializedName
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.text.SimpleDateFormat
 import java.util.*
 
 data class CoinGeckoCoinResponse(
@@ -102,3 +103,22 @@ data class TickerMarketRaw(
     val id: String,
     val name: String,
 )
+
+data class GeckoCoinPriceResponse(
+    val id: String,
+    val current_price: BigDecimal?,
+    @SerializedName("price_change_percentage_24h")
+    val priceChange: BigDecimal?,
+    @SerializedName("last_updated")
+    val lastUpdated: String?
+) {
+    val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
+
+    fun coinPrice(currencyCode: String) = when {
+        current_price == null || priceChange == null || lastUpdated == null -> null
+        else -> {
+            CoinPrice(id, currencyCode, current_price, priceChange,
+                format.parse(lastUpdated).time)
+        }
+    }
+}

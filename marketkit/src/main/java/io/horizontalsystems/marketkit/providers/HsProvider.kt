@@ -17,6 +17,10 @@ class HsProvider(baseUrl: String, apiKey: String) {
             .create(MarketService::class.java)
     }
 
+    private val coinGeckoService by lazy {
+        RetrofitUtils.build("https://api.coingecko.com/api/v3/").create(CoinGeckoProvider.CoinGeckoService::class.java)
+    }
+
     fun getFullCoins(page: Int, limit: Int): Single<List<FullCoin>> {
         return service.getFullCoins(page, limit)
             .map { responseCoinsList ->
@@ -168,6 +172,17 @@ class HsProvider(baseUrl: String, apiKey: String) {
         return service.getCoinReports(coinUid)
     }
 
+
+    fun getCoinGeckoPrices(coinUids: List<String>, currencyCode: String): Single<List<CoinPrice>> {
+        val result = coinGeckoService.getCoinPrice(coinUids.joinToString(separator = ","), currencyCode)
+        return result
+            .map { coinPrices ->
+                coinPrices.mapNotNull { coinPriceResponse ->
+                    coinPriceResponse.coinPrice(currencyCode)
+                }
+            }
+    }
+
     private interface MarketService {
         @GET("coins")
         fun getFullCoins(
@@ -298,6 +313,11 @@ class HsProvider(baseUrl: String, apiKey: String) {
             private const val advancedMarketFields =
                 "all_platforms,price,market_cap,total_volume,price_change_24h,price_change_7d,price_change_14d,price_change_30d,price_change_200d,price_change_1y,ath_percentage,atl_percentage"
         }
+    }
+
+
+    private interface CoinGeckoMarketService {
+
     }
 }
 

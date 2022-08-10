@@ -12,6 +12,7 @@ interface ISchedulerProvider {
     val lastSyncTimestamp: Long?
     val expirationInterval: Long
     val syncSingle: Single<Unit>
+    val syncGeckoSingle: Single<Unit>
 
     fun notifyExpired()
 }
@@ -39,11 +40,24 @@ class CoinPriceSchedulerProvider(
                        val safeCoinPriceList = mutableListOf<CoinPrice>()
                        // 新增本地safe-erc20、safe-bep20市场价格
                        safeCoinPriceList.add(CoinPrice("custom_safe-erc20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp))
-                       safeCoinPriceList.add(CoinPrice("custom_safe-bep20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp))
+//                       safeCoinPriceList.add(CoinPrice("custom_safe-bep20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp))
                        manager.handleUpdated(safeCoinPriceList, currencyCode)
                    }
                 }
                 handle(it)
+            }.map {}
+
+    override val syncGeckoSingle: Single<Unit>
+        get() = provider.getCoinGeckoPrices(listOf("safe-anwang"), currencyCode)
+            .doOnSuccess {
+                it.stream().forEach { item ->
+                    if (item.coinUid == "safe-anwang") {
+                        val safeCoinPriceList = mutableListOf<CoinPrice>()
+                        // 新增本地safe-erc20、safe-bep20市场价格
+                        safeCoinPriceList.add(CoinPrice("custom_safe-bep20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp))
+                        manager.handleUpdated(safeCoinPriceList, currencyCode)
+                    }
+                }
             }.map {}
 
     private val coinUids: List<String>

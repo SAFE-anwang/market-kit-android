@@ -77,6 +77,13 @@ class Scheduler(
             }, {
                 schedule(retryInterval)
             })
+        provider.syncGeckoSingle
+            .subscribeOn(Schedulers.io())
+            .subscribe({
+
+            }, {
+
+            })
     }
 
     private fun notifyRatesIfExpired() {
