@@ -35,16 +35,11 @@ class CoinPriceSchedulerProvider(
     override val syncSingle: Single<Unit>
         get() = provider.getCoinPrices(coinUids, currencyCode)
             .doOnSuccess {
-                it.stream().forEach { item ->
-                   if (item.coinUid == "safe-coin") {
-                       val safeCoinPriceList = mutableListOf<CoinPrice>()
-                       // 新增本地safe-erc20、safe-bep20市场价格
-                       safeCoinPriceList.add(CoinPrice("custom_safe-erc20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp))
-//                       safeCoinPriceList.add(CoinPrice("custom_safe-bep20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp))
-                       manager.handleUpdated(safeCoinPriceList, currencyCode)
-                   }
+                // safe 价格从 coinGecko获取
+                val list = it.filter {
+                    it.coinUid != "safe-coin"
                 }
-                handle(it)
+                handle(list)
             }.map {}
 
     override val syncGeckoSingle: Single<Unit>
@@ -54,6 +49,8 @@ class CoinPriceSchedulerProvider(
                     if (item.coinUid == "safe-anwang") {
                         val safeCoinPriceList = mutableListOf<CoinPrice>()
                         // 新增本地safe-erc20、safe-bep20市场价格
+                        safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff, item.timestamp))
+                        safeCoinPriceList.add(CoinPrice("custom_safe-erc20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp))
                         safeCoinPriceList.add(CoinPrice("custom_safe-bep20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp))
                         manager.handleUpdated(safeCoinPriceList, currencyCode)
                     }

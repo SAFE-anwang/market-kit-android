@@ -1,5 +1,6 @@
 package io.horizontalsystems.marketkit.models
 
+import android.util.Log
 import com.google.gson.annotations.SerializedName
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -112,13 +113,16 @@ data class GeckoCoinPriceResponse(
     @SerializedName("last_updated")
     val lastUpdated: String?
 ) {
-    val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
+
 
     fun coinPrice(currencyCode: String) = when {
-        current_price == null || priceChange == null || lastUpdated == null -> null
+        current_price == null || priceChange == null || lastUpdated == null -> {
+            null
+        }
         else -> {
+            val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
             CoinPrice(id, currencyCode, current_price, priceChange,
-                format.parse(lastUpdated).time)
+                format.parse(lastUpdated.replace("Z", "")).time)
         }
     }
 }

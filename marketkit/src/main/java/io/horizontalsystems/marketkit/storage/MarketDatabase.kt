@@ -71,7 +71,8 @@ abstract class MarketDatabase : RoomDatabase() {
 
             // force db creation
             db.query("select 1", null)
-
+            db.coinDao().deleteCoin("0xmonero")
+            db.coinDao().deleteCoin("0xcert")
             return db
         }
 
