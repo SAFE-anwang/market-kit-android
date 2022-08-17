@@ -1,5 +1,6 @@
 package io.horizontalsystems.marketkit.managers
 
+import android.util.Log
 import io.horizontalsystems.marketkit.models.*
 import io.horizontalsystems.marketkit.providers.CoinGeckoProvider
 import io.horizontalsystems.marketkit.providers.DefiYieldProvider
@@ -47,8 +48,20 @@ class CoinManager(
     }
 
     fun marketInfosSingle(coinUids: List<String>, currencyCode: String): Single<List<MarketInfo>> {
+        // 获取Safe币价格
+        var coinGeckoInfo: List<GeckoCoinPriceResponse>? = null
+        if (coinUids.contains("safe-coin")) {
+            coinGeckoInfo = hsProvider.getCoinGeckoInfo(listOf("safe-anwang"), currencyCode).blockingGet()
+        }
         return hsProvider.marketInfosSingle(coinUids, currencyCode).map {
-            getMarketInfos(it)
+            var result = getMarketInfos(it)
+            coinGeckoInfo?.let {
+                val coinInfo = it[0]
+                result = result.map {
+                    it.copy(price = coinInfo.current_price, priceChange24h = coinInfo.priceChange, marketCap = coinInfo.marketCap, totalVolume = coinInfo.totalVolume)
+                }
+            }
+            result
         }
     }
 

@@ -111,7 +111,11 @@ data class GeckoCoinPriceResponse(
     @SerializedName("price_change_percentage_24h")
     val priceChange: BigDecimal?,
     @SerializedName("last_updated")
-    val lastUpdated: String?
+    val lastUpdated: String?,
+    @SerializedName("market_cap")
+    val marketCap: BigDecimal?,
+    @SerializedName("total_volume")
+    val totalVolume: BigDecimal?
 ) {
 
 
