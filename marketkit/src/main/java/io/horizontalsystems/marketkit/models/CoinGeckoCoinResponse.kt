@@ -6,6 +6,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.HashMap
 
 data class CoinGeckoCoinResponse(
     val id: String,
@@ -130,3 +131,15 @@ data class GeckoCoinPriceResponse(
         }
     }
 }
+
+data class GeckoCoinHistoryPriceResponse(
+    val id: String,
+    val name: String,
+    @SerializedName("market_data")
+    val marketData: GeckoCoinMarketHistoryPrice
+)
+
+data class GeckoCoinMarketHistoryPrice(
+    @SerializedName("current_price")
+    val currentPrice: HashMap<String, BigDecimal?>
+)

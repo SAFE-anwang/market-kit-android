@@ -5,6 +5,8 @@ import io.horizontalsystems.marketkit.providers.HsProvider
 import io.horizontalsystems.marketkit.storage.CoinHistoricalPriceStorage
 import io.reactivex.Single
 import java.math.BigDecimal
+import java.text.SimpleDateFormat
+import java.util.*
 import kotlin.math.abs
 
 class CoinHistoricalPriceManager(
@@ -21,7 +23,24 @@ class CoinHistoricalPriceManager(
         storage.coinPrice(coinUid, currencyCode, timestamp)?.let {
             return Single.just(it.value)
         }
+        val calendar = Calendar.getInstance()
+        calendar.set(2022, 6, 28)
+        val timestampTmp = calendar.timeInMillis
+        // 从 2022-7-28开始，safe的价格从coin gecko获取
+        if (coinUid == "safe-coin" && timestamp * 1000 >= timestampTmp) {
+            val date = SimpleDateFormat("dd-MM-yyyy").format(Date(timestamp * 1000))
+            val coinId = "safe-anwang"
 
+            return hsProvider.getCoinGeckoHistoryPrice(coinId, date)
+                .flatMap { response ->
+                    if (response.marketData.currentPrice.containsKey(currencyCode.lowercase())) {
+                        val price = response.marketData.currentPrice[currencyCode.lowercase()]
+                        Single.just(price)
+                    } else {
+                        Single.error(ProviderError.NoDataForCoin())
+                    }
+                }
+        }
         return hsProvider.historicalCoinPriceSingle(coinUid, currencyCode, timestamp)
             .flatMap { response ->
                 if (abs(timestamp - response.timestamp) < 24 * 60 * 60) {

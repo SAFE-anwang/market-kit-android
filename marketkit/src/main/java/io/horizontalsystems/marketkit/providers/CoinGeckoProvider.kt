@@ -1,9 +1,6 @@
 package io.horizontalsystems.marketkit.providers
 
-import io.horizontalsystems.marketkit.models.CoinGeckoCoinResponse
-import io.horizontalsystems.marketkit.models.Exchange
-import io.horizontalsystems.marketkit.models.ExchangeRaw
-import io.horizontalsystems.marketkit.models.GeckoCoinPriceResponse
+import io.horizontalsystems.marketkit.models.*
 import io.reactivex.Single
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -70,6 +67,12 @@ class CoinGeckoProvider(private val baseUrl: String) {
             @Query("vs_currencies") currency: String,
             @Query("include_24hr_change") change: Boolean = true
         ): Single<List<GeckoCoinPriceResponse>>
+
+        @GET("coins/{id}/history")
+        fun getCoinHistoryPrice (
+            @Path("id") coinId: String,
+            @Query("date") date: String,
+        ): Single<GeckoCoinHistoryPriceResponse>
 
         object Response {
             data class HistoricalMarketData(

@@ -187,6 +187,10 @@ class HsProvider(baseUrl: String, apiKey: String) {
         return coinGeckoService.getCoinPrice(coinUids.joinToString(separator = ","), currencyCode)
     }
 
+    fun getCoinGeckoHistoryPrice(coinUid: String, date: String): Single<GeckoCoinHistoryPriceResponse> {
+        return coinGeckoService.getCoinHistoryPrice(coinUid, date)
+    }
+
     private interface MarketService {
         @GET("coins")
         fun getFullCoins(
