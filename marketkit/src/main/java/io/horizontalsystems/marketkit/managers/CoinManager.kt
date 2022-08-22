@@ -78,6 +78,11 @@ class CoinManager(
     ): Single<MarketInfoOverview> {
         return hsProvider.getMarketInfoOverview(coinUid, currencyCode, language)
             .map { overviewRaw ->
+                // 获取Safe信息
+                var coinGeckoInfo: CoinGeckoMarketResponse? = null
+                if (coinUid == "safe-coin") {
+                    coinGeckoInfo = hsProvider.getCoinGeckoMarketInfoOverview("safe-anwang").blockingGet()
+                }
                 val categoriesMap = categoryManager.coinCategories(overviewRaw.categoryIds)
                     .map { it.uid to it }
                     .toMap()
@@ -101,7 +106,24 @@ class CoinManager(
                         LinkType.fromString(linkTypeRaw)?.let {
                             it to link
                         }
-                    }.toMap()
+                    }.toMap().toMutableMap()
+
+                coinGeckoInfo?.let {
+                    if(it.links.homepage.size > 0) {
+                        links[LinkType.Website] = it.links.homepage[0]
+                    }
+                    it.links.twitter?.let {
+                        links[LinkType.Twitter] = it
+                    }
+                    it.links.telegram?.let {
+                        links[LinkType.Telegram] = it
+                    }
+                    it.links.repos_url?.let {
+                        if (it.containsKey("github") && it["github"]?.size!! > 0) {
+                            links[LinkType.Github] = it["github"]!![0]
+                        }
+                    }
+                }
 
                 MarketInfoOverview(
                     overviewRaw.marketData.marketCap,

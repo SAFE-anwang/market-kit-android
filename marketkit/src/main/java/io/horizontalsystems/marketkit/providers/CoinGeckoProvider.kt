@@ -74,6 +74,17 @@ class CoinGeckoProvider(private val baseUrl: String) {
             @Query("date") date: String,
         ): Single<GeckoCoinHistoryPriceResponse>
 
+        @GET("coins/{coinId}")
+        fun getMarketInfoOverview(
+            @Path("coinId") coinId: String,
+            @Query("tickers") tickers: String,
+            @Query("localization") localization: String,
+            @Query("market_data") marketData: String,
+            @Query("community_data") communityData: String,
+            @Query("developer_data") developerData: String,
+            @Query("sparkline") sparkline: String,
+        ): Single<CoinGeckoMarketResponse>
+
         object Response {
             data class HistoricalMarketData(
                 val prices: List<List<BigDecimal>>,

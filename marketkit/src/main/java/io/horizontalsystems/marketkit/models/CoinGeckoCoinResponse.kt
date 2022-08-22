@@ -143,3 +143,22 @@ data class GeckoCoinMarketHistoryPrice(
     @SerializedName("current_price")
     val currentPrice: HashMap<String, BigDecimal?>
 )
+
+data class CoinGeckoMarketResponse(
+    val id: String,
+    val symbol: String,
+    val name: String,
+    val links: GeckoCoinLinks
+) {
+
+}
+
+data class GeckoCoinLinks(
+    val homepage: List<String>,
+    @SerializedName("twitter_screen_name")
+    val twitter: String?,
+    @SerializedName("telegram_channel_identifier")
+    val telegram: String?,
+    val repos_url: Map<String, List<String>>?,
+    val subreddit_url: String?
+)
