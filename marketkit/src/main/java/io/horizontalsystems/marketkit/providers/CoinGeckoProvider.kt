@@ -21,8 +21,9 @@ class CoinGeckoProvider(private val baseUrl: String) {
     }
 
     fun marketTickersSingle(coinGeckoId: String): Single<CoinGeckoCoinResponse> {
+        val coinGeckoUid = if (coinGeckoId == "safe-coin") "safe-anwang" else coinGeckoId
         return coinGeckoService.marketTickers(
-            coinGeckoId,
+            coinGeckoUid,
             "true",
             "false",
             "false",
