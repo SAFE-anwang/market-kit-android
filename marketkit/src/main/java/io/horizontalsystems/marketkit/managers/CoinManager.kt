@@ -58,7 +58,16 @@ class CoinManager(
             coinGeckoInfo?.let {
                 val coinInfo = it[0]
                 result = result.map {
-                    it.copy(price = coinInfo.current_price, priceChange24h = coinInfo.priceChange, marketCap = coinInfo.marketCap, totalVolume = coinInfo.totalVolume)
+                    if (it.fullCoin.coin.uid == "safe-coin") {
+                        it.copy(
+                            price = coinInfo.current_price,
+                            priceChange24h = coinInfo.priceChange,
+                            marketCap = coinInfo.marketCap,
+                            totalVolume = coinInfo.totalVolume
+                        )
+                    } else {
+                        it
+                    }
                 }
             }
             result
