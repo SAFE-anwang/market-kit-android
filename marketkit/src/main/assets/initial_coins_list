@@ -15933,7 +15933,6 @@ INSERT INTO Platform VALUES('erc20|0xe530441f4f73bdb6dc2fa5af7c3fc5fd551ec838',4
 INSERT INTO Platform VALUES('erc20|0x4639cd8cd52ec1cf2e496a606ce28d8afb1c792f',18,'cbdao');
 INSERT INTO Platform VALUES('erc20|0xa283aa7cfbb27ef0cfbcb2493dd9f4330e0fd304',18,'mm-token');
 INSERT INTO Platform VALUES('erc20|0xa10740ff9ff6852eac84cdcff9184e1d6d27c057',18,'wrapped-gen-0-cryptokitties');
-INSERT INTO Platform VALUES('erc20|0x83e2be8d114f9661221384b3a50d24b96a5653f5',18,'0xcert');
 INSERT INTO Platform VALUES('bep20|0xf0186490b18cb74619816cfc7feb51cdbe4ae7b9',18,'zasset-zusd');
 INSERT INTO Platform VALUES('erc20|0x8d75959f1e61ec2571aa72798237101f084de63a',18,'substratum');
 INSERT INTO Platform VALUES('erc20|0x182f4c4c97cd1c24e1df8fc4c053e5c47bf53bef',18,'keytango');
@@ -20376,9 +20375,6 @@ INSERT INTO Platform VALUES('bep20|0x70e132641d6f1bd787b119a289fee544fbb2f316',8
 INSERT INTO Platform VALUES('erc20|0x030ba81f1c18d280636f32af80b9aad02cf0854e',18,'aave-weth');
 INSERT INTO Platform VALUES('erc20|0x27c1ba4f85b8dc1c150157816623a6ce80b7f187',18,'3x-long-xrp-token');
 INSERT INTO Platform VALUES('erc20|0x7e03521b9da891ca3f79a8728e2eaeb24886c5f9',18,'3x-long-matic-token');
-INSERT INTO Platform VALUES('bep20|0x22a213852cee93eb6d41601133414d180c5684c2',18,'0xmonero');
-INSERT INTO Platform VALUES('erc20|0x035df12e0f3ac6671126525f1015e47d79dfeddf',18,'0xmonero');
-INSERT INTO Platform VALUES('mrc20|0x52ede6bba83b7b4ba1d738df0df713d6a2036b71',18,'0xmonero');
 INSERT INTO Platform VALUES('erc20|0xfe17c3c0b6f38cf3bd8ba872bee7a18ab16b43fb',18,'15777-ardmore');
 INSERT INTO Platform VALUES('erc20|0x10e1e953ddba597011f8bfa806ab0cc3415a622b',18,'1x-short-ethereum-token');
 INSERT INTO Platform VALUES('erc20|0x1e6bb68acec8fefbd87d192be09bb274170a0548',9,'aave-interest-bearing-ampl');

@@ -56,4 +56,6 @@ interface CoinDao {
     @Query("DELETE FROM Coin WHERE uid = :coinUid")
     fun deleteCoin(coinUid: String)
 
+    @Query("DELETE FROM Platform WHERE coinUid = :coinUid")
+    fun deletePlatform(coinUid: String)
 }
