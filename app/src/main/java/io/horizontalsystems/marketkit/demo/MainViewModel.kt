@@ -2,12 +2,12 @@ package io.horizontalsystems.marketkit.demo
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import io.horizontalsystems.marketkit.MarketKit
-import io.horizontalsystems.marketkit.models.ChartType
-import io.horizontalsystems.marketkit.models.HsTimePeriod
-import io.horizontalsystems.marketkit.models.PlatformType
+import io.horizontalsystems.marketkit.models.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -110,7 +110,7 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
         val fullCoins = marketKit.fullCoins(filter, 100)
         Log.w("AAA", "Using filter $filter and got ${fullCoins.size} coins")
         fullCoins.forEach {
-            Log.w("AAA", "Coin ${it.coin.code}, ${it.coin.name}, platforms: ${it.platforms}")
+            Log.w("AAA", "Coin ${it.coin.code}, ${it.coin.name}, platforms: ${it.tokens}")
         }
     }
 
@@ -164,6 +164,40 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
             }
     }
 
+    fun runCoinCategoriesMarketData() {
+        val currencyCode = "USD"
+        marketKit.coinCategoriesSingle(currencyCode)
+            .subscribeOn(Schedulers.io())
+            .subscribe({
+                it.forEach {
+                    Log.w("AAA", "Category: ${it.uid} marketCap: ${it.marketCap} diff24H: ${it.diff24H}")
+                }
+            }, {
+                Log.e("AAA", "runCategoriesMarketData Error", it)
+            })
+            .let {
+                disposables.add(it)
+            }
+    }
+
+    fun runCoinCategoryMarketPoints() {
+        val categoryUid = "oracles"
+        val interval = HsTimePeriod.Week1
+        val currencyCode = "RUB"
+        marketKit.coinCategoryMarketPointsSingle(categoryUid, interval, currencyCode)
+            .subscribeOn(Schedulers.io())
+            .subscribe({
+                it.forEach {
+                    Log.w("AAA", "Category Market Point: ${categoryUid} marketCap: ${it.marketCap} timestamp: ${it.timestamp}")
+                }
+            }, {
+                Log.e("AAA", "runCoinCategoryMarketPoints Error", it)
+            })
+            .let {
+                disposables.add(it)
+            }
+    }
+
     fun runFetchPosts() {
         marketKit.postsSingle()
             .subscribeOn(Schedulers.io())
@@ -183,6 +217,41 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
     fun runMarketInfoOverview() {
         doMarketInfoOverview("bitcoin")
         doMarketInfoOverview("tether")
+    }
+
+    fun runMarketOverview() {
+        Log.w("AAA", "doMarketOverview")
+        marketKit.marketOverviewSingle("USD")
+            .subscribeOn(Schedulers.io())
+            .subscribe({
+                Log.w("AAA", "marketOverview global: ${it.globalMarketPoints}")
+                Log.w("AAA", "marketOverview coinCategories: ${it.coinCategories}")
+                Log.w("AAA", "marketOverview topPlatforms: ${it.topPlatforms}")
+                Log.w("AAA", "marketOverview nft collections: ${it.nftCollections}")
+            }, {
+                Log.e("AAA", "marketOverview Error", it)
+            })
+            .let {
+                disposables.add(it)
+            }
+    }
+
+    fun runNftCollections() {
+        Log.w("AAA", "doCollections")
+        viewModelScope.launch {
+            val collections = marketKit.nftTopCollections()
+
+            Log.w("AAA", "collections count: ${collections.size}")
+            collections.firstOrNull()?.let { collection ->
+                Log.w("AAA", "${collection.blockchainType}")
+                Log.w("AAA", "${collection.providerUid}")
+                Log.w("AAA", "${collection.name}")
+                Log.w("AAA", "${collection.thumbnailImageUrl}")
+                Log.w("AAA", "${collection.floorPrice}")
+                Log.w("AAA", "${collection.volumes}")
+                Log.w("AAA", "${collection.changes}")
+            }
+        }
     }
 
     private fun doMarketInfoOverview(coinUid: String) {
@@ -224,7 +293,7 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
                     .forEach {
                         Log.w(
                             "AAA",
-                            "getMarketTickers: ${it.marketName} rate: ${it.rate} vol: ${it.volume} base: ${it.base} target: ${it.target}"
+                            "getMarketTickers: ${it.marketName} rate: ${it.rate} vol: ${it.volume} base: ${it.base} target: ${it.target} tradeUrl: ${it.tradeUrl}"
                         )
                     }
             }, {
@@ -255,12 +324,53 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
             }
     }
 
-    fun runPlatformCoinsByPlatformType() {
-        val platformType = PlatformType.Ethereum
-        val filter = "eth"
-        val coinList = marketKit.platformCoins(platformType, filter, 30)
+    fun runTokensByBlockchainType() {
+        val blockchainType = BlockchainType.Ethereum
+        val coinList = marketKit.tokens(blockchainType, "eth", 30)
+        Log.w("AAA", "tokensByBlockchainType ${coinList.size} coins found")
         coinList.forEach {
-            Log.w("AAA", "getPlatformCoinsByPlatformType code: ${it.code} name: ${it.name} marketCapRank: ${it.coin.marketCapRank} coinType.id: ${it.coinType.id}", )
+            Log.w("AAA", "tokensByBlockchainType code: ${it.coin.code} name: ${it.coin.name} marketCapRank: ${it.coin.marketCapRank} coinType.id: ${it.type.id}")
+        }
+    }
+
+    fun runBlockchainsType() {
+        val blockchains = marketKit.blockchains(listOf("bitcoin", "ethereum"))
+        Log.w("AAA", "runBlockchainsType ${blockchains.size} coins found")
+        blockchains.forEach {
+            Log.w("AAA", "runBlockchainsType name: ${it.name}")
+        }
+    }
+
+    fun runFullCoins() {
+        val fullCoins = marketKit.fullCoins(listOf("bitcoin", "ethereum"))
+        Log.w("AAA", "runFullCoins ${fullCoins.size} coins found")
+        fullCoins.forEach {
+            Log.w("AAA", "runFullCoins name: ${it.coin.name} tokens: ${it.tokens.size}")
+        }
+    }
+
+    fun runTokenByTokenQuery() {
+        val blockchainType = BlockchainType.Ethereum
+        val coin = marketKit.token(TokenQuery(blockchainType, TokenType.Native))
+        Log.w("AAA", "runTokenByTokenQuery $coin")
+    }
+
+    fun runTokensByTokenQuery() {
+        val queries = listOf(
+            TokenQuery(BlockchainType.Ethereum, TokenType.Native),
+            TokenQuery(BlockchainType.BinanceSmartChain, TokenType.Native)
+        )
+
+        val coinsList = marketKit.tokens(queries)
+        coinsList.forEach {
+            Log.w("AAA", "runTokensByTokenQuery code: ${it.coin.code} name: ${it.coin.name} marketCapRank: ${it.coin.marketCapRank} coinType.id: ${it.type.id}")
+        }
+    }
+
+    fun runTokensReference() {
+        val coinsList = marketKit.tokens("0x11cdb42b0eb46d95f990bedd4695a6e3fa034978")
+        coinsList.forEach {
+            Log.w("AAA", "runTokensReference code: ${it.coin.code} name: ${it.coin.name} marketCapRank: ${it.coin.marketCapRank} coinType.id: ${it.type.id}")
         }
     }
 
@@ -277,6 +387,53 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
                 Log.e("AAA", "coinHistoricalPriceValueSingle Error", it)
             })
             .let {
+                disposables.add(it)
+            }
+    }
+
+    fun runTopPlatforms() {
+        val currencyCode = "eur"
+        marketKit.topPlatformsSingle(currencyCode)
+            .subscribeOn(Schedulers.io())
+            .subscribe({ platforms ->
+                platforms.forEach {
+                    Log.e("AAA", "topPlatformsSingle ${it.blockchain.name} marketCap: ${it.marketCap} rank: ${it.rank}")
+                }
+            }, {
+                Log.e("AAA", "topPlatformsSingle error", it)
+            }).let {
+                disposables.add(it)
+            }
+    }
+
+    fun runTopPlatformMarketCapPoints() {
+        val chain = "ethereum"
+        val currencyCode = "rub"
+        marketKit.topPlatformMarketCapPointsSingle(chain, HsTimePeriod.Day1, currencyCode)
+            .subscribeOn(Schedulers.io())
+            .subscribe({ points ->
+                points.forEach {
+                    Log.e("AAA", "timestamp: ${it.timestamp} marketCap: ${it.marketCap} ")
+                }
+            }, {
+                Log.e("AAA", "topPlatformsMarketCapPointsSingle error", it)
+            }).let {
+                disposables.add(it)
+            }
+    }
+
+    fun runTopPlatformCoinList() {
+        val chain = "ethereum"
+        val currencyCode = "eur"
+        marketKit.topPlatformCoinListSingle(chain, currencyCode)
+            .subscribeOn(Schedulers.io())
+            .subscribe({ points ->
+                points.forEach {
+                    Log.e("AAA", "coin: ${it.fullCoin.coin.code} marketCap: ${it.marketCap} ")
+                }
+            }, {
+                Log.e("AAA", "runTopPlatformCoinList error", it)
+            }).let {
                 disposables.add(it)
             }
     }

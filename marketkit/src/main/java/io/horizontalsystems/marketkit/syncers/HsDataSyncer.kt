@@ -1,30 +1,26 @@
 package io.horizontalsystems.marketkit.syncers
 
 import android.util.Log
-import io.horizontalsystems.marketkit.managers.CoinCategoryManager
 import io.horizontalsystems.marketkit.providers.HsProvider
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 
-class CoinCategorySyncer(
+class HsDataSyncer(
+    private val coinSyncer: CoinSyncer,
     private val hsProvider: HsProvider,
-    private val coinCategoryManager: CoinCategoryManager
 ) {
+
     private var disposable: Disposable? = null
 
     fun sync() {
-        disposable = hsProvider.getCoinCategories()
+        disposable = hsProvider.statusSingle()
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
-            .subscribe({ categories ->
-                coinCategoryManager.handleFetched(categories)
+            .subscribe({ status ->
+                coinSyncer.sync(status.coins, status.blockchains, status.tokens)
             }, {
-                Log.e("AAA", "CoinCategorySyncer error", it)
+                Log.e("CoinSyncer", "sync() error", it)
             })
     }
 
-    fun stop() {
-        disposable?.dispose()
-        disposable = null
-    }
 }

@@ -9,14 +9,15 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import io.horizontalsystems.marketkit.models.*
 import java.io.BufferedReader
 import java.io.InputStreamReader
+//import java.util.concurrent.Executors
 import java.util.logging.Logger
 
 
 @Database(
     entities = [
         Coin::class,
-        Platform::class,
-        CoinCategory::class,
+        BlockchainEntity::class,
+        TokenEntity::class,
         CoinPrice::class,
         CoinHistoricalPrice::class,
         ChartPointEntity::class,
@@ -24,13 +25,12 @@ import java.util.logging.Logger
         Exchange::class,
         SyncerState::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(DatabaseTypeConverters::class)
 abstract class MarketDatabase : RoomDatabase() {
     abstract fun coinDao(): CoinDao
-    abstract fun coinCategoryDao(): CoinCategoryDao
     abstract fun coinPriceDao(): CoinPriceDao
     abstract fun coinHistoricalPriceDao(): CoinHistoricalPriceDao
     abstract fun chartPointDao(): ChartPointDao
@@ -65,6 +65,9 @@ abstract class MarketDatabase : RoomDatabase() {
                         logger.info("Loaded coins count: $loadedCount")
                     }
                 })
+//                .setQueryCallback({ sqlQuery, bindArgs ->
+//                    println("SQL Query: $sqlQuery SQL Args: $bindArgs")
+//                }, Executors.newSingleThreadExecutor())
                 .fallbackToDestructiveMigration()
                 .allowMainThreadQueries()
                 .build()
@@ -73,8 +76,6 @@ abstract class MarketDatabase : RoomDatabase() {
             db.query("select 1", null)
             db.coinDao().deleteCoin("0xmonero")
             db.coinDao().deleteCoin("0xcert")
-            db.coinDao().deletePlatform("0xmonero")
-            db.coinDao().deletePlatform("0xcert")
             return db
         }
 
@@ -90,7 +91,7 @@ abstract class MarketDatabase : RoomDatabase() {
                     insertCount++
                 }
             } catch (error: Exception) {
-                logger.warning("Error in loadInitialCoins(): ${error.message ?: error.javaClass.simpleName}")
+                logger.warning("sql Error in loadInitialCoins(): ${error.message ?: error.javaClass.simpleName}")
             }
 
             return insertCount

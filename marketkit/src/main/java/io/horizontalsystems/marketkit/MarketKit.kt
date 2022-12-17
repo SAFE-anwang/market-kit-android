@@ -9,18 +9,18 @@ import io.horizontalsystems.marketkit.managers.*
 import io.horizontalsystems.marketkit.models.*
 import io.horizontalsystems.marketkit.providers.*
 import io.horizontalsystems.marketkit.storage.*
-import io.horizontalsystems.marketkit.syncers.CoinCategorySyncer
 import io.horizontalsystems.marketkit.syncers.CoinSyncer
 import io.horizontalsystems.marketkit.syncers.ExchangeSyncer
+import io.horizontalsystems.marketkit.syncers.HsDataSyncer
 import io.reactivex.Observable
 import io.reactivex.Single
 import java.math.BigDecimal
 
 class MarketKit(
+    private val nftManager: NftManager,
+    private val marketOverviewManager: MarketOverviewManager,
     private val coinManager: CoinManager,
-    private val coinCategoryManager: CoinCategoryManager,
     private val coinSyncer: CoinSyncer,
-    private val coinCategorySyncer: CoinCategorySyncer,
     private val coinPriceManager: CoinPriceManager,
     private val coinHistoricalPriceManager: CoinHistoricalPriceManager,
     private val coinPriceSyncManager: CoinPriceSyncManager,
@@ -28,13 +28,14 @@ class MarketKit(
     private val chartManager: ChartManager,
     private val exchangeSyncer: ExchangeSyncer,
     private val chartSyncManager: ChartSyncManager,
-    private val globalMarketInfoManager: GlobalMarketInfoManager
+    private val globalMarketInfoManager: GlobalMarketInfoManager,
+    private val hsProvider: HsProvider,
+    private val hsDataSyncer: HsDataSyncer
 ) {
     // Coins
 
     val fullCoinsUpdatedObservable: Observable<Unit>
-        get() = coinManager.fullCoinsUpdatedObservable
-
+        get() = coinSyncer.fullCoinsUpdatedObservable
 
     fun fullCoins(filter: String, limit: Int = 20): List<FullCoin> {
         return coinManager.fullCoins(filter, limit)
@@ -44,9 +45,23 @@ class MarketKit(
         return coinManager.fullCoins(coinUids)
     }
 
-    fun fullCoinsByCoinTypes(coinTypes: List<CoinType>): List<FullCoin> {
-        return coinManager.fullCoinsByCoinTypes(coinTypes)
-    }
+    fun token(query: TokenQuery): Token? =
+        coinManager.token(query)
+
+    fun tokens(queries: List<TokenQuery>): List<Token> =
+        coinManager.tokens(queries)
+
+    fun tokens(reference: String): List<Token> =
+        coinManager.tokens(reference)
+
+    fun tokens(blockchainType: BlockchainType, filter: String, limit: Int = 20): List<Token> =
+        coinManager.tokens(blockchainType, filter, limit)
+
+    fun blockchains(uids: List<String>): List<Blockchain> =
+        coinManager.blockchains(uids)
+
+    fun blockchain(uid: String): Blockchain? =
+        coinManager.blockchain(uid)
 
     fun marketInfosSingle(top: Int, currencyCode: String, defi: Boolean = false): Single<List<MarketInfo>> {
         return coinManager.marketInfosSingle(top, currencyCode, defi)
@@ -96,39 +111,16 @@ class MarketKit(
         return coinManager.defiMarketInfosSingle(currencyCode)
     }
 
-    fun platformCoin(coinType: CoinType): PlatformCoin? {
-        return coinManager.platformCoin(coinType)
-    }
-
-    fun platformCoins(platformType: PlatformType, filter: String, limit: Int = 20): List<PlatformCoin> {
-        return coinManager.platformCoins(platformType, filter, limit)
-    }
-
-    fun platformCoins(coinTypes: List<CoinType>): List<PlatformCoin> {
-        return coinManager.platformCoins(coinTypes)
-    }
-
-    fun platformCoinsByCoinTypeIds(coinTypeIds: List<String>): List<PlatformCoin> {
-        return coinManager.platformCoinsByCoinTypeIds(coinTypeIds)
-    }
-
     // Categories
 
-    val coinCategoriesObservable: Observable<List<CoinCategory>>
-        get() = coinCategoryManager.coinCategoriesObservable
+    fun coinCategoriesSingle(currencyCode: String): Single<List<CoinCategory>> =
+        hsProvider.getCoinCategories(currencyCode)
 
-
-    fun coinCategories(): List<CoinCategory> {
-        return coinCategoryManager.coinCategories()
-    }
-
-    fun coinCategory(uid: String): CoinCategory? {
-        return coinCategoryManager.coinCategory(uid)
-    }
+    fun coinCategoryMarketPointsSingle(categoryUid: String, interval: HsTimePeriod, currencyCode: String) =
+        hsProvider.coinCategoryMarketPointsSingle(categoryUid, interval, currencyCode)
 
     fun sync() {
-        coinSyncer.sync()
-        coinCategorySyncer.sync()
+        hsDataSyncer.sync()
         exchangeSyncer.sync()
     }
 
@@ -209,6 +201,32 @@ class MarketKit(
         return coinManager.auditReportsSingle(addresses)
     }
 
+    // Pro Details
+
+    fun dexLiquiditySingle(coinUid: String, currencyCode: String, timePeriod: HsTimePeriod, sessionKey: String?): Single<DexLiquiditiesResponse> {
+        return coinManager.dexLiquiditySingle(coinUid, currencyCode, timePeriod, sessionKey)
+    }
+
+    fun dexVolumesSingle(coinUid: String, currencyCode: String, timePeriod: HsTimePeriod, sessionKey: String?): Single<DexVolumesResponse> {
+        return coinManager.dexVolumesSingle(coinUid, currencyCode, timePeriod, sessionKey)
+    }
+
+    fun transactionDataSingle(coinUid: String, currencyCode: String, timePeriod: HsTimePeriod, platform: String?, sessionKey: String?): Single<TransactionsDataResponse> {
+        return coinManager.transactionDataSingle(coinUid, currencyCode, timePeriod, platform, sessionKey)
+    }
+
+    fun activeAddressesSingle(coinUid: String, currencyCode: String, timePeriod: HsTimePeriod, sessionKey: String?): Single<ActiveAddressesDataResponse> {
+        return coinManager.activeAddressesSingle(coinUid, currencyCode, timePeriod, sessionKey)
+    }
+
+    // Overview
+    fun marketOverviewSingle(currencyCode: String): Single<MarketOverview> =
+        marketOverviewManager.marketOverviewSingle(currencyCode)
+
+
+    fun topMoversSingle(currencyCode: String): Single<TopMovers> =
+        coinManager.topMoversSingle(currencyCode)
+
     // Chart Info
 
     fun chartInfo(coinUid: String, currencyCode: String, interval: HsTimePeriod): ChartInfo? {
@@ -233,6 +251,28 @@ class MarketKit(
         return globalMarketInfoManager.globalMarketInfoSingle(currencyCode, timePeriod)
     }
 
+    fun topPlatformsSingle(currencyCode: String): Single<List<TopPlatform>> {
+        return coinManager.topPlatformsSingle(currencyCode)
+    }
+
+    fun topPlatformMarketCapPointsSingle(chain: String, timePeriod: HsTimePeriod, currencyCode: String): Single<List<TopPlatformMarketCapPoint>> {
+        return coinManager.topPlatformMarketCapPointsSingle(chain, timePeriod, currencyCode)
+    }
+
+    fun topPlatformCoinListSingle(chain: String, currencyCode: String): Single<List<MarketInfo>> {
+        return coinManager.topPlatformCoinListSingle(chain, currencyCode)
+    }
+
+    // NFT
+
+    suspend fun nftTopCollections(): List<NftTopCollection> = nftManager.topCollections()
+
+    //Misc
+
+    fun syncInfo() : SyncInfo {
+        return coinSyncer.syncInfo()
+    }
+
     companion object {
         fun getInstance(
             context: Context,
@@ -253,22 +293,16 @@ class MarketKit(
 
             val marketDatabase = MarketDatabase.getInstance(context)
             val hsProvider = HsProvider(hsApiBaseUrl, hsApiKey)
-            val coinCategoryManager = CoinCategoryManager(CoinCategoryStorage(marketDatabase))
+            val hsNftProvider = HsNftProvider(hsApiBaseUrl, hsApiKey)
             val coinGeckoProvider = CoinGeckoProvider("https://api.coingecko.com/api/v3/")
             val defiYieldProvider = DefiYieldProvider(defiYieldApiKey)
             val exchangeManager = ExchangeManager(ExchangeStorage(marketDatabase))
             val exchangeSyncer = ExchangeSyncer(exchangeManager, coinGeckoProvider, marketDatabase.syncerStateDao())
-            val coinManager =
-                CoinManager(
-                    CoinStorage(marketDatabase),
-                    hsProvider,
-                    coinCategoryManager,
-                    coinGeckoProvider,
-                    defiYieldProvider,
-                    exchangeManager
-                )
-            val coinSyncer = CoinSyncer(hsProvider, coinManager, marketDatabase.syncerStateDao())
-            val coinCategorySyncer = CoinCategorySyncer(hsProvider, coinCategoryManager)
+            val coinStorage = CoinStorage(marketDatabase)
+            val coinManager = CoinManager(coinStorage, hsProvider, coinGeckoProvider, defiYieldProvider, exchangeManager)
+            val nftManager = NftManager(coinManager, hsNftProvider)
+            val marketOverviewManager = MarketOverviewManager(nftManager, hsProvider)
+            val coinSyncer = CoinSyncer(hsProvider, coinStorage, marketDatabase.syncerStateDao())
             val coinPriceManager = CoinPriceManager(CoinPriceStorage(marketDatabase))
             val coinHistoricalPriceManager = CoinHistoricalPriceManager(
                 CoinHistoricalPriceStorage(marketDatabase),
@@ -286,12 +320,13 @@ class MarketKit(
             }
             val globalMarketInfoStorage = GlobalMarketInfoStorage(marketDatabase)
             val globalMarketInfoManager = GlobalMarketInfoManager(hsProvider, globalMarketInfoStorage)
+            val hsDataSyncer = HsDataSyncer(coinSyncer, hsProvider)
 
             return MarketKit(
+                nftManager,
+                marketOverviewManager,
                 coinManager,
-                coinCategoryManager,
                 coinSyncer,
-                coinCategorySyncer,
                 coinPriceManager,
                 coinHistoricalPriceManager,
                 coinPriceSyncManager,
@@ -300,6 +335,8 @@ class MarketKit(
                 exchangeSyncer,
                 chartSyncManager,
                 globalMarketInfoManager,
+                hsProvider,
+                hsDataSyncer
             )
         }
     }
@@ -316,3 +353,9 @@ sealed class ProviderError : Exception() {
     class NoDataForCoin : ProviderError()
     class ReturnedTimestampIsVeryInaccurate : ProviderError()
 }
+
+class SyncInfo(
+    val coinsTimestamp: String?,
+    val blockchainsTimestamp: String?,
+    val tokensTimestamp: String?
+)

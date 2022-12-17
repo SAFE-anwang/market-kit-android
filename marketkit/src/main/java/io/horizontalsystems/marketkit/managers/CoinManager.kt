@@ -1,45 +1,52 @@
 package io.horizontalsystems.marketkit.managers
 
-import android.util.Log
 import io.horizontalsystems.marketkit.models.*
 import io.horizontalsystems.marketkit.providers.CoinGeckoProvider
 import io.horizontalsystems.marketkit.providers.DefiYieldProvider
 import io.horizontalsystems.marketkit.providers.HsProvider
 import io.horizontalsystems.marketkit.storage.CoinStorage
 import io.reactivex.Single
-import io.reactivex.subjects.PublishSubject
 
 class CoinManager(
     private val storage: CoinStorage,
     private val hsProvider: HsProvider,
-    private val categoryManager: CoinCategoryManager,
     private val coinGeckoProvider: CoinGeckoProvider,
     private val defiYieldProvider: DefiYieldProvider,
     private val exchangeManager: ExchangeManager
 ) {
-    val fullCoinsUpdatedObservable = PublishSubject.create<Unit>()
 
-    fun coin(uid: String): Coin? = storage.coin(uid)
+    fun fullCoin(uid: String): FullCoin? =
+        storage.fullCoin(uid)
 
-    fun fullCoins(filter: String, limit: Int): List<FullCoin> {
-        return storage.fullCoins(filter, limit)
-    }
+    fun fullCoins(filter: String, limit: Int): List<FullCoin> =
+        storage.fullCoins(filter, limit)
 
-    fun fullCoins(coinUids: List<String>): List<FullCoin> {
-        return storage.fullCoins(coinUids)
-    }
-
-    fun fullCoinsByCoinTypes(coinTypes: List<CoinType>): List<FullCoin> {
-        val platformCoins = storage.platformCoins(coinTypes)
-
-        return storage.fullCoins(platformCoins.map { it.coin.uid })
-    }
+    fun fullCoins(coinUids: List<String>): List<FullCoin> =
+        storage.fullCoins(coinUids)
 
     fun marketInfosSingle(top: Int, currencyCode: String, defi: Boolean): Single<List<MarketInfo>> {
         return hsProvider.marketInfosSingle(top, currencyCode, defi).map {
             getMarketInfos(it)
         }
     }
+
+    fun token(query: TokenQuery): Token? =
+        storage.getToken(query)
+
+    fun tokens(queries: List<TokenQuery>): List<Token> =
+        storage.getTokens(queries)
+
+    fun tokens(reference: String): List<Token> =
+        storage.getTokens(reference)
+
+    fun tokens(blockchainType: BlockchainType, filter: String, limit: Int): List<Token> =
+        storage.getTokens(blockchainType, filter, limit)
+
+    fun blockchain(uid: String): Blockchain? =
+        storage.getBlockchain(uid)
+
+    fun blockchains(uids: List<String>): List<Blockchain> =
+        storage.getBlockchains(uids)
 
     fun advancedMarketInfosSingle(top: Int, currencyCode: String): Single<List<MarketInfo>> {
         return hsProvider.advancedMarketInfosSingle(top, currencyCode).map {
@@ -85,71 +92,58 @@ class CoinManager(
         currencyCode: String,
         language: String
     ): Single<MarketInfoOverview> {
-        return hsProvider.getMarketInfoOverview(coinUid, currencyCode, language)
-            .map { overviewRaw ->
-                // 获取Safe信息
-                var coinGeckoInfo: CoinGeckoMarketResponse? = null
-                if (coinUid == "safe-coin") {
-                    coinGeckoInfo = hsProvider.getCoinGeckoMarketInfoOverview("safe-anwang").blockingGet()
-                }
-                val categoriesMap = categoryManager.coinCategories(overviewRaw.categoryIds)
-                    .map { it.uid to it }
-                    .toMap()
+        return hsProvider.getMarketInfoOverview(coinUid, currencyCode, language).map { rawOverview ->
+            val fullCoin = fullCoin(coinUid) ?: throw Exception("No Full Coin")
 
-                val performance = overviewRaw.performance.map { (vsCurrency, v) ->
-                    vsCurrency to v.mapNotNull { (timePeriodRaw, performance) ->
-                        if (performance == null) return@mapNotNull null
-
-                        val timePeriod = when (timePeriodRaw) {
-                            "7d" -> HsTimePeriod.Week1
-                            "30d" -> HsTimePeriod.Month1
-                            else -> return@mapNotNull null
-                        }
-
-                        timePeriod to performance
-                    }.toMap()
-                }.toMap()
-
-                val links = overviewRaw.links
-                    .mapNotNull { (linkTypeRaw, link) ->
-                        LinkType.fromString(linkTypeRaw)?.let {
-                            it to link
-                        }
-                    }.toMap().toMutableMap()
-
-                coinGeckoInfo?.let {
-                    if(it.links.homepage.size > 0) {
-                        links[LinkType.Website] = it.links.homepage[0]
-                    }
-                    it.links.twitter?.let {
-                        links[LinkType.Twitter] = it
-                    }
-                    it.links.telegram?.let {
-                        links[LinkType.Telegram] = it
-                    }
-                    it.links.repos_url?.let {
-                        if (it.containsKey("github") && it["github"]?.size!! > 0) {
-                            links[LinkType.Github] = it["github"]!![0]
-                        }
-                    }
-                }
-
-                MarketInfoOverview(
-                    overviewRaw.marketData.marketCap,
-                    overviewRaw.marketData.marketCapRank,
-                    overviewRaw.marketData.totalSupply,
-                    overviewRaw.marketData.circulatingSupply,
-                    overviewRaw.marketData.volume24h,
-                    overviewRaw.marketData.dilutedMarketCap,
-                    overviewRaw.marketData.tvl,
-                    performance,
-                    overviewRaw.genesisDate,
-                    overviewRaw.categoryIds.mapNotNull { categoriesMap[it] },
-                    overviewRaw.description ?: "",
-                    overviewRaw.platforms.mapNotNull { it.coinType },
-                    links,
-                )
+            // 获取Safe信息
+            var coinGeckoInfo: CoinGeckoMarketResponse? = null
+            if (coinUid == "safe-coin") {
+                coinGeckoInfo = hsProvider.getCoinGeckoMarketInfoOverview("safe-anwang").blockingGet()
             }
+            /*val categoriesMap = categoryManager.coinCategories(overviewRaw.categoryIds)
+                .map { it.uid to it }
+                .toMap()*/
+
+            val performance = rawOverview.performance.map { (vsCurrency, v) ->
+                vsCurrency to v.mapNotNull { (timePeriodRaw, performance) ->
+                    if (performance == null) return@mapNotNull null
+
+                    val timePeriod = when (timePeriodRaw) {
+                        "7d" -> HsTimePeriod.Week1
+                        "30d" -> HsTimePeriod.Month1
+                        else -> return@mapNotNull null
+                    }
+
+                    timePeriod to performance
+                }.toMap()
+            }.toMap()
+
+            val links = rawOverview.links
+                .mapNotNull { (linkTypeRaw, link) ->
+                    LinkType.fromString(linkTypeRaw)?.let {
+                        it to link
+                    }
+                }.toMap().toMutableMap()
+
+            coinGeckoInfo?.let {
+                if(it.links.homepage.size > 0) {
+                    links[LinkType.Website] = it.links.homepage[0]
+                }
+                it.links.twitter?.let {
+                    links[LinkType.Twitter] = it
+                }
+                it.links.telegram?.let {
+                    links[LinkType.Telegram] = it
+                }
+                it.links.repos_url?.let {
+                    if (it.containsKey("github") && it["github"]?.size!! > 0) {
+                        links[LinkType.Github] = it["github"]!![0]
+                    }
+                }
+            }
+
+            rawOverview.marketInfoOverview(fullCoin)
+        }
     }
 
     fun marketTickersSingle(coinUid: String): Single<List<MarketTicker>> {
@@ -157,30 +151,12 @@ class CoinManager(
 
         return coinGeckoProvider.marketTickersSingle(coinGeckoId)
             .map { response ->
+                val coinUids =
+                    (response.tickers.map { it.coinId } + response.tickers.mapNotNull { it.targetCoinId }).distinct()
+                val coins = storage.coins(coinUids)
                 val imageUrls = exchangeManager.imageUrlsMap(response.exchangeIds)
-                response.marketTickers(imageUrls)
+                response.marketTickers(imageUrls, coins)
             }
-    }
-
-    fun platformCoin(coinType: CoinType): PlatformCoin? {
-        return storage.platformCoin(coinType)
-    }
-
-    fun platformCoins(platformType: PlatformType, filter: String, limit: Int): List<PlatformCoin> {
-        return storage.platformCoins(platformType, filter, limit)
-    }
-
-    fun platformCoins(coinTypes: List<CoinType>): List<PlatformCoin> {
-        return storage.platformCoins(coinTypes)
-    }
-
-    fun platformCoinsByCoinTypeIds(coinTypeIds: List<String>): List<PlatformCoin> {
-        return storage.platformCoinsByCoinTypeIds(coinTypeIds)
-    }
-
-    fun handleFetched(fullCoins: List<FullCoin>) {
-        storage.save(fullCoins)
-        fullCoinsUpdatedObservable.onNext(Unit)
     }
 
     fun defiMarketInfosSingle(currencyCode: String): Single<List<DefiMarketInfo>> {
@@ -231,17 +207,35 @@ class CoinManager(
         return defiYieldProvider.auditReportsSingle(addresses)
     }
 
-    private fun getMarketInfos(rawMarketInfos: List<MarketInfoRaw>): List<MarketInfo> {
-        return try {
-            val fullCoins = storage.fullCoins(rawMarketInfos.map { it.uid })
-            val hashMap = fullCoins.map { it.coin.uid to it }.toMap()
+    fun topPlatformsSingle(currencyCode: String): Single<List<TopPlatform>> {
+        return hsProvider.topPlatformsSingle(currencyCode)
+            .map { responseList -> responseList.map { it.topPlatform } }
+    }
 
-            rawMarketInfos.mapNotNull { rawMarketInfo ->
-                val fullCoin = hashMap[rawMarketInfo.uid] ?: return@mapNotNull null
-                MarketInfo(rawMarketInfo, fullCoin)
+    fun topPlatformMarketCapPointsSingle(chain: String, timePeriod: HsTimePeriod, currencyCode: String): Single<List<TopPlatformMarketCapPoint>> {
+        return hsProvider.topPlatformMarketCapPointsSingle(chain, timePeriod, currencyCode)
+    }
+
+    fun topPlatformCoinListSingle(chain: String, currencyCode: String): Single<List<MarketInfo>> {
+        return hsProvider.topPlatformCoinListSingle(chain, currencyCode)
+            .map { getMarketInfos(it) }
+    }
+
+    private fun getMarketInfos(rawMarketInfos: List<MarketInfoRaw>): List<MarketInfo> {
+        return buildList {
+            rawMarketInfos.chunked(700).forEach { chunkedRawMarketInfos ->
+                try {
+                    val fullCoins = storage.fullCoins(chunkedRawMarketInfos.map { it.uid })
+                    val hashMap = fullCoins.associateBy { it.coin.uid }
+
+                    addAll(
+                        chunkedRawMarketInfos.mapNotNull { rawMarketInfo ->
+                            val fullCoin = hashMap[rawMarketInfo.uid] ?: return@mapNotNull null
+                            MarketInfo(rawMarketInfo, fullCoin)
+                        }
+                    )
+                } catch (e: Exception) { }
             }
-        } catch (e: Exception) {
-            emptyList()
         }
     }
 
@@ -254,5 +248,61 @@ class CoinManager(
             DefiMarketInfo(rawDefiMarketInfo, fullCoin)
         }
     }
+
+    fun dexLiquiditySingle(
+        coinUid: String,
+        currencyCode: String,
+        timePeriod: HsTimePeriod,
+        sessionKey: String?
+    ): Single<DexLiquiditiesResponse> {
+        return hsProvider.dexLiquiditySingle(coinUid, currencyCode, timePeriod, sessionKey)
+    }
+
+    fun dexVolumesSingle(
+        coinUid: String,
+        currencyCode: String,
+        timePeriod: HsTimePeriod,
+        sessionKey: String?
+    ): Single<DexVolumesResponse> {
+        return hsProvider.dexVolumesSingle(coinUid, currencyCode, timePeriod, sessionKey)
+    }
+
+    fun transactionDataSingle(
+        coinUid: String,
+        currencyCode: String,
+        timePeriod: HsTimePeriod,
+        platform: String?,
+        sessionKey: String?
+    ): Single<TransactionsDataResponse> {
+        return hsProvider.transactionDataSingle(
+            coinUid,
+            currencyCode,
+            timePeriod,
+            platform,
+            sessionKey
+        )
+    }
+
+    fun activeAddressesSingle(
+        coinUid: String,
+        currencyCode: String,
+        timePeriod: HsTimePeriod,
+        sessionKey: String?
+    ): Single<ActiveAddressesDataResponse> {
+        return hsProvider.activeAddressesSingle(coinUid, currencyCode, timePeriod, sessionKey)
+    }
+
+    fun topMoversSingle(currencyCode: String): Single<TopMovers> =
+        hsProvider.topMoversRawSingle(currencyCode)
+            .map { raw ->
+                TopMovers(
+                    gainers100 = getMarketInfos(raw.gainers100),
+                    gainers200 = getMarketInfos(raw.gainers200),
+                    gainers300 = getMarketInfos(raw.gainers300),
+                    losers100 = getMarketInfos(raw.losers100),
+                    losers200 = getMarketInfos(raw.losers200),
+                    losers300 = getMarketInfos(raw.losers300)
+                )
+            }
 
 }

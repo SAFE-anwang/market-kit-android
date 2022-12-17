@@ -5,6 +5,7 @@ import io.horizontalsystems.marketkit.chart.HsChartRequestHelper
 import io.horizontalsystems.marketkit.models.*
 import io.reactivex.Single
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Path
 import retrofit2.http.Query
 import java.math.BigDecimal
@@ -19,13 +20,6 @@ class HsProvider(baseUrl: String, apiKey: String) {
 
     private val coinGeckoService by lazy {
         RetrofitUtils.build("https://api.coingecko.com/api/v3/").create(CoinGeckoProvider.CoinGeckoService::class.java)
-    }
-
-    fun getFullCoins(page: Int, limit: Int): Single<List<FullCoin>> {
-        return service.getFullCoins(page, limit)
-            .map { responseCoinsList ->
-                responseCoinsList.map { it.fullCoin() }
-            }
     }
 
     fun marketInfosSingle(
@@ -51,8 +45,16 @@ class HsProvider(baseUrl: String, apiKey: String) {
         return service.getMarketInfosByCategory(categoryUid, currencyCode)
     }
 
-    fun getCoinCategories(): Single<List<CoinCategory>> {
-        return service.getCategories()
+    fun getCoinCategories(currencyCode: String): Single<List<CoinCategory>> {
+        return service.getCategories(currencyCode)
+    }
+
+    fun coinCategoryMarketPointsSingle(
+        categoryUid: String,
+        timePeriod: HsTimePeriod,
+        currencyCode: String,
+    ): Single<List<CoinCategoryMarketPoint>> {
+        return service.coinCategoryMarketPoints(categoryUid, timePeriod.value, currencyCode)
     }
 
     fun getCoinPrices(coinUids: List<String>, currencyCode: String): Single<List<CoinPrice>> {
@@ -131,7 +133,7 @@ class HsProvider(baseUrl: String, apiKey: String) {
         return service.getMarketInfoGlobalTvl(
             currencyCode,
             timePeriod.value,
-            chain = if (chain.isNotBlank()) chain else null
+            blockchain = if (chain.isNotBlank()) chain else null
         ).map { responseList ->
             responseList.mapNotNull {
                 it.tvl?.let { tvl ->
@@ -203,13 +205,59 @@ class HsProvider(baseUrl: String, apiKey: String) {
             "false")
     }
 
+    fun topPlatformsSingle(currencyCode: String): Single<List<TopPlatformResponse>> {
+        return service.getTopPlatforms(currencyCode)
+    }
+
+    fun topPlatformMarketCapPointsSingle(chain: String, timePeriod: HsTimePeriod, currencyCode: String): Single<List<TopPlatformMarketCapPoint>> {
+        return service.getTopPlatformMarketCapPoints(chain, timePeriod.value, currencyCode)
+    }
+
+    fun topPlatformCoinListSingle(chain: String, currencyCode: String): Single<List<MarketInfoRaw>> {
+        return service.getTopPlatformCoinList(chain, currencyCode)
+    }
+
+    fun dexLiquiditySingle(coinUid: String, currencyCode: String, timePeriod: HsTimePeriod, sessionKey: String?): Single<DexLiquiditiesResponse> {
+        return service.getDexLiquidities(sessionKey?.let { "Bearer ${it}" }, coinUid, timePeriod.value)
+    }
+
+    fun dexVolumesSingle(coinUid: String, currencyCode: String, timePeriod: HsTimePeriod, sessionKey: String?): Single<DexVolumesResponse> {
+        return service.getDexVolumes(sessionKey?.let { "Bearer ${it}" }, coinUid, timePeriod.value)
+    }
+
+    fun transactionDataSingle(coinUid: String, currencyCode: String, timePeriod: HsTimePeriod, platform: String?, sessionKey: String?): Single<TransactionsDataResponse> {
+        return service.getTransactions(sessionKey?.let { "Bearer ${it}" }, coinUid, timePeriod.value, platform)
+    }
+
+    fun activeAddressesSingle(coinUid: String, currencyCode: String, timePeriod: HsTimePeriod, sessionKey: String?): Single<ActiveAddressesDataResponse> {
+        return service.getActiveAddresses(sessionKey?.let { "Bearer ${it}" }, coinUid, timePeriod.value)
+    }
+
+    fun marketOverviewSingle(currencyCode: String): Single<MarketOverviewResponse> {
+        return service.getMarketOverview(currencyCode)
+    }
+
+    fun topMoversRawSingle(currencyCode: String): Single<TopMoversRaw> {
+        return service.getTopMovers(currencyCode)
+    }
+
+    fun statusSingle(): Single<HsStatus> {
+        return service.getStatus()
+    }
+
+    fun allCoinsSingle(): Single<List<CoinResponse>> {
+        return service.getAllCoins()
+    }
+
+    fun allBlockchainsSingle(): Single<List<BlockchainResponse>> {
+        return service.getAllBlockchains()
+    }
+
+    fun allTokensSingle(): Single<List<TokenResponse>> {
+        return service.getAllTokens()
+    }
+
     private interface MarketService {
-        @GET("coins")
-        fun getFullCoins(
-            @Query("page") page: Int,
-            @Query("limit") limit: Int,
-            @Query("fields") fields: String = fullCoinFields,
-        ): Single<List<FullCoinResponse>>
 
         @GET("coins")
         fun getMarketInfos(
@@ -242,7 +290,16 @@ class HsProvider(baseUrl: String, apiKey: String) {
         ): Single<List<MarketInfoRaw>>
 
         @GET("categories")
-        fun getCategories(): Single<List<CoinCategory>>
+        fun getCategories(
+            @Query("currency") currencyCode: String
+        ): Single<List<CoinCategory>>
+
+        @GET("categories/{categoryUid}/market_cap")
+        fun coinCategoryMarketPoints(
+            @Path("categoryUid") categoryUid: String,
+            @Query("interval") interval: String,
+            @Query("currency") currencyCode: String,
+        ): Single<List<CoinCategoryMarketPoint>>
 
         @GET("coins")
         fun getCoinPrices(
@@ -284,6 +341,35 @@ class HsProvider(baseUrl: String, apiKey: String) {
             @Query("currency") currencyCode: String
         ): Single<MarketInfoDetailsResponse>
 
+        @GET("transactions/dex-liquidity")
+        fun getDexLiquidities(
+            @Header("authorization") auth: String?,
+            @Query("coin_uid") coinUid: String,
+            @Query("interval") interval: String
+        ): Single<DexLiquiditiesResponse>
+
+        @GET("transactions/dex-volumes")
+        fun getDexVolumes(
+            @Header("authorization") auth: String?,
+            @Query("coin_uid") coinUid: String,
+            @Query("interval") interval: String
+        ): Single<DexVolumesResponse>
+
+        @GET("transactions")
+        fun getTransactions(
+            @Header("authorization") auth: String?,
+            @Query("coin_uid") coinUid: String,
+            @Query("interval") interval: String,
+            @Query("platform") platform: String?
+        ): Single<TransactionsDataResponse>
+
+        @GET("addresses")
+        fun getActiveAddresses(
+            @Header("authorization") auth: String?,
+            @Query("coin_uid") coinUid: String,
+            @Query("interval") interval: String
+        ): Single<ActiveAddressesDataResponse>
+
         @GET("defi-protocols/{coinUid}/tvls")
         fun getMarketInfoTvl(
             @Path("coinUid") coinUid: String,
@@ -295,7 +381,7 @@ class HsProvider(baseUrl: String, apiKey: String) {
         fun getMarketInfoGlobalTvl(
             @Query("currency") currencyCode: String,
             @Query("interval") interval: String,
-            @Query("chain") chain: String?
+            @Query("blockchain") blockchain: String?
         ): Single<List<MarketInfoTvlResponse>>
 
         @GET("addresses/holders")
@@ -325,10 +411,50 @@ class HsProvider(baseUrl: String, apiKey: String) {
             @Query("currency") currencyCode: String,
         ): Single<List<GlobalMarketPoint>>
 
+        @GET("top-platforms")
+        fun getTopPlatforms(
+            @Query("currency") currencyCode: String
+        ): Single<List<TopPlatformResponse>>
+
+        @GET("top-platforms/{chain}/chart")
+        fun getTopPlatformMarketCapPoints(
+            @Path("chain") chain: String,
+            @Query("interval") timePeriod: String,
+            @Query("currency") currencyCode: String,
+        ): Single<List<TopPlatformMarketCapPoint>>
+
+        @GET("top-platforms/{chain}/list")
+        fun getTopPlatformCoinList(
+            @Path("chain") chain: String,
+            @Query("currency") currencyCode: String,
+        ): Single<List<MarketInfoRaw>>
+
+        @GET("markets/overview")
+        fun getMarketOverview(
+            @Query("currency") currencyCode: String,
+            @Query("simplified") simplified: Boolean = true
+        ): Single<MarketOverviewResponse>
+
+        @GET("coins/top-movers")
+        fun getTopMovers(
+            @Query("currency") currencyCode: String
+        ): Single<TopMoversRaw>
+
+        @GET("status/updates")
+        fun getStatus(): Single<HsStatus>
+
+        @GET("coins/list")
+        fun getAllCoins(): Single<List<CoinResponse>>
+
+        @GET("blockchains/list")
+        fun getAllBlockchains(): Single<List<BlockchainResponse>>
+
+        @GET("tokens/list")
+        fun getAllTokens(): Single<List<TokenResponse>>
+
         companion object {
             private const val marketInfoFields =
-                "name,code,price,price_change_24h,market_cap_rank,coingecko_id,market_cap,total_volume"
-            private const val fullCoinFields = "name,code,market_cap_rank,coingecko_id,all_platforms"
+                "name,code,price,price_change_24h,market_cap_rank,coingecko_id,market_cap,market_cap_rank,total_volume"
             private const val coinPriceFields = "price,price_change_24h,last_updated"
             private const val advancedMarketFields =
                 "all_platforms,price,market_cap,total_volume,price_change_24h,price_change_7d,price_change_14d,price_change_30d,price_change_200d,price_change_1y,ath_percentage,atl_percentage"

@@ -1,20 +1,27 @@
 package io.horizontalsystems.marketkit.models
 
 import android.os.Parcelable
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import com.google.gson.annotations.SerializedName
 import kotlinx.parcelize.Parcelize
+import java.math.BigDecimal
 
 @Parcelize
-@Entity
 data class CoinCategory(
-    @PrimaryKey
     val uid: String,
     val name: String,
     val description: Map<String, String>,
-    val order: Int
+    @SerializedName("market_cap")
+    val marketCap: BigDecimal?,
+    @SerializedName("change_24h")
+    val diff24H: BigDecimal?,
+    @SerializedName("change_1w")
+    val diff1W: BigDecimal?,
+    @SerializedName("change_1m")
+    val diff1M: BigDecimal?,
 ) : Parcelable {
+
     override fun toString(): String {
-        return "CoinCategory [uid: $uid; name: $name; descriptionCount: ${description.size}; order: $order]"
+        return "CoinCategory [uid: $uid; name: $name; descriptionCount: ${description.size}]"
     }
+
 }
