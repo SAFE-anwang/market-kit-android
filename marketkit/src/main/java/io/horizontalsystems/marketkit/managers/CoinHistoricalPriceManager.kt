@@ -36,6 +36,11 @@ class CoinHistoricalPriceManager(
                 .flatMap { response ->
                     if (response.marketData.currentPrice.containsKey(currencyCode.lowercase())) {
                         val price = response.marketData.currentPrice[currencyCode.lowercase()]
+                        price?.let {
+                            val coinHistoricalPrice = CoinHistoricalPrice(coinUid, currencyCode, price, timestamp)
+                            storage.save(coinHistoricalPrice)
+                        }
+
                         Single.just(price)
                     } else {
                         Single.error(ProviderError.NoDataForCoin())

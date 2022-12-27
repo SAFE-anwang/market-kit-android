@@ -62,22 +62,35 @@ class CoinManager(
         }
         return hsProvider.marketInfosSingle(coinUids, currencyCode).map {
             var result = getMarketInfos(it)
-            coinGeckoInfo?.let {
-                val coinInfo = it[0]
-                result = result.map {
-                    if (it.fullCoin.coin.uid == "safe-coin") {
-                        it.copy(
-                            price = coinInfo.current_price,
-                            priceChange24h = coinInfo.priceChange,
-                            marketCap = coinInfo.marketCap,
-                            totalVolume = coinInfo.totalVolume
-                        )
-                    } else {
-                        it
-                    }
+            var safeMarketInfo: MarketInfo? = null
+            if (coinUids.contains("safe-coin")) {
+                val safeInfo = storage.fullCoin("safe-coin")
+                if (safeInfo != null && coinGeckoInfo != null) {
+                    val coinInfo = coinGeckoInfo[0]
+
+                    safeMarketInfo = MarketInfo(safeInfo,
+                        price = coinInfo.current_price,
+                        priceChange24h = coinInfo.priceChange,
+                        priceChange7d = null,
+                        priceChange14d = null,
+                        priceChange30d = null,
+                        priceChange200d = null,
+                        priceChange1y = null,
+                        marketCap = coinInfo.marketCap,
+                        marketCapRank = null,
+                        totalVolume = coinInfo.totalVolume,
+                        athPercentage = coinInfo.totalVolume,
+                        atlPercentage = coinInfo.totalVolume)
                 }
             }
-            result
+            if (safeMarketInfo != null) {
+                val totalResult = mutableListOf<MarketInfo>()
+                totalResult.add(safeMarketInfo)
+                totalResult.addAll(result)
+                totalResult
+            } else {
+                result
+            }
         }
     }
 
@@ -221,7 +234,7 @@ class CoinManager(
             .map { getMarketInfos(it) }
     }
 
-    private fun getMarketInfos(rawMarketInfos: List<MarketInfoRaw>): List<MarketInfo> {
+    private fun getMarketInfos(rawMarketInfos: List<MarketInfoRaw>, containsSafe: Boolean = false): List<MarketInfo> {
         return buildList {
             rawMarketInfos.chunked(700).forEach { chunkedRawMarketInfos ->
                 try {
