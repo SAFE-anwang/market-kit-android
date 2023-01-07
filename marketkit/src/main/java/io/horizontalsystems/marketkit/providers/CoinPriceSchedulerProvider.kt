@@ -49,9 +49,9 @@ class CoinPriceSchedulerProvider(
                     if (item.coinUid == "safe-anwang") {
                         val safeCoinPriceList = mutableListOf<CoinPrice>()
                         // 新增本地safe-erc20、safe-bep20市场价格
-                        safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff, item.timestamp))
-                        safeCoinPriceList.add(CoinPrice("custom_safe-erc20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp))
-                        safeCoinPriceList.add(CoinPrice("custom_safe-bep20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp))
+                        safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                        safeCoinPriceList.add(CoinPrice("custom_safe-erc20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                        safeCoinPriceList.add(CoinPrice("custom_safe-bep20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp/1000))
                         manager.handleUpdated(safeCoinPriceList, currencyCode)
                     }
                 }
