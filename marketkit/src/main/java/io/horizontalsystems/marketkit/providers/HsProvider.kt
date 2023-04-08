@@ -77,15 +77,14 @@ class HsProvider(baseUrl: String, apiKey: String) {
     fun coinPriceChartSingle(
         coinUid: String,
         currencyCode: String,
-        interval: HsTimePeriod,
-        indicatorPoints: Int
+        periodType: HsPointTimePeriod,
+        fromTimestamp: Long?
     ): Single<List<ChartCoinPriceResponse>> {
-        val currentTime = Date().time / 1000
-        val fromTimestamp =
-            HsChartRequestHelper.fromTimestamp(currentTime, interval, indicatorPoints)
-        val pointInterval = HsChartRequestHelper.pointInterval(interval).value
+        return service.getCoinPriceChart(coinUid, currencyCode, fromTimestamp, periodType.value)
+    }
 
-        return service.getCoinPriceChart(coinUid, currencyCode, fromTimestamp, pointInterval)
+    fun coinPriceChartStartTime(coinUid: String): Single<Long> {
+        return service.getCoinPriceChartStart(coinUid).map { it.timestamp }
     }
 
     fun getMarketInfoOverview(
@@ -119,7 +118,7 @@ class HsProvider(baseUrl: String, apiKey: String) {
         return service.getMarketInfoTvl(coinUid, currencyCode, timePeriod.value)
             .map { responseList ->
                 responseList.mapNotNull {
-                    it.tvl?.let { tvl -> ChartPoint(tvl, it.timestamp, emptyMap()) }
+                    it.tvl?.let { tvl -> ChartPoint(tvl, it.timestamp, null) }
                 }
             }
     }
@@ -137,14 +136,14 @@ class HsProvider(baseUrl: String, apiKey: String) {
         ).map { responseList ->
             responseList.mapNotNull {
                 it.tvl?.let { tvl ->
-                    ChartPoint(tvl, it.timestamp, emptyMap())
+                    ChartPoint(tvl, it.timestamp, null)
                 }
             }
         }
     }
 
-    fun topHoldersSingle(coinUid: String): Single<List<TokenHolder>> {
-        return service.getTopHolders(coinUid)
+    fun tokenHoldersSingle(coinUid: String, blockchainUid: String): Single<TokenHolders> {
+        return service.getTokenHolders(coinUid, blockchainUid)
     }
 
     fun coinTreasuriesSingle(coinUid: String, currencyCode: String): Single<List<CoinTreasury>> {
@@ -217,19 +216,19 @@ class HsProvider(baseUrl: String, apiKey: String) {
         return service.getTopPlatformCoinList(chain, currencyCode)
     }
 
-    fun dexLiquiditySingle(coinUid: String, currencyCode: String, timePeriod: HsTimePeriod, sessionKey: String?): Single<DexLiquiditiesResponse> {
-        return service.getDexLiquidities(sessionKey?.let { "Bearer ${it}" }, coinUid, timePeriod.value)
+    fun dexLiquiditySingle(coinUid: String, currencyCode: String, timePeriod: HsTimePeriod, sessionKey: String?): Single<List<Analytics.VolumePoint>> {
+        return service.getDexLiquidities(sessionKey?.let { "Bearer ${it}" }, coinUid, currencyCode, timePeriod.value)
     }
 
-    fun dexVolumesSingle(coinUid: String, currencyCode: String, timePeriod: HsTimePeriod, sessionKey: String?): Single<DexVolumesResponse> {
-        return service.getDexVolumes(sessionKey?.let { "Bearer ${it}" }, coinUid, timePeriod.value)
+    fun dexVolumesSingle(coinUid: String, currencyCode: String, timePeriod: HsTimePeriod, sessionKey: String?): Single<List<Analytics.VolumePoint>> {
+        return service.getDexVolumes(sessionKey?.let { "Bearer ${it}" }, coinUid, currencyCode, timePeriod.value)
     }
 
-    fun transactionDataSingle(coinUid: String, currencyCode: String, timePeriod: HsTimePeriod, platform: String?, sessionKey: String?): Single<TransactionsDataResponse> {
+    fun transactionDataSingle(coinUid: String, timePeriod: HsTimePeriod, platform: String?, sessionKey: String?): Single<List<Analytics.CountVolumePoint>> {
         return service.getTransactions(sessionKey?.let { "Bearer ${it}" }, coinUid, timePeriod.value, platform)
     }
 
-    fun activeAddressesSingle(coinUid: String, currencyCode: String, timePeriod: HsTimePeriod, sessionKey: String?): Single<ActiveAddressesDataResponse> {
+    fun activeAddressesSingle(coinUid: String, timePeriod: HsTimePeriod, sessionKey: String?): Single<List<Analytics.CountPoint>> {
         return service.getActiveAddresses(sessionKey?.let { "Bearer ${it}" }, coinUid, timePeriod.value)
     }
 
@@ -255,6 +254,22 @@ class HsProvider(baseUrl: String, apiKey: String) {
 
     fun allTokensSingle(): Single<List<TokenResponse>> {
         return service.getAllTokens()
+    }
+
+    fun analyticsPreviewSingle(coinUid: String): Single<AnalyticsPreview> {
+        return service.getAnalyticsPreview(coinUid)
+    }
+
+    fun analyticsSingle(coinUid: String, currencyCode: String): Single<Analytics> {
+        return service.getAnalyticsData(coinUid, currencyCode)
+    }
+
+    fun rankValueSingle(type: String, currencyCode: String): Single<List<RankValue>> {
+        return service.getRankValue(type, currencyCode)
+    }
+
+    fun rankMultiValueSingle(type: String, currencyCode: String): Single<List<RankMultiValue>> {
+        return service.getRankMultiValue(type, currencyCode)
     }
 
     private interface MarketService {
@@ -319,9 +334,14 @@ class HsProvider(baseUrl: String, apiKey: String) {
         fun getCoinPriceChart(
             @Path("coinUid") coinUid: String,
             @Query("currency") currencyCode: String,
-            @Query("from_timestamp") timestamp: Long,
+            @Query("from_timestamp") timestamp: Long?,
             @Query("interval") interval: String,
         ): Single<List<ChartCoinPriceResponse>>
+
+        @GET("coins/{coinUid}/price_chart_start")
+        fun getCoinPriceChartStart(
+            @Path("coinUid") coinUid: String
+        ): Single<PriceChartStart>
 
         @GET("coins/{coinUid}")
         fun getMarketInfoOverview(
@@ -341,34 +361,36 @@ class HsProvider(baseUrl: String, apiKey: String) {
             @Query("currency") currencyCode: String
         ): Single<MarketInfoDetailsResponse>
 
-        @GET("transactions/dex-liquidity")
+        @GET("analytics/{coinUid}/dex-liquidity")
         fun getDexLiquidities(
             @Header("authorization") auth: String?,
-            @Query("coin_uid") coinUid: String,
+            @Path("coinUid") coinUid: String,
+            @Query("currency") currencyCode: String,
             @Query("interval") interval: String
-        ): Single<DexLiquiditiesResponse>
+        ): Single<List<Analytics.VolumePoint>>
 
-        @GET("transactions/dex-volumes")
+        @GET("analytics/{coinUid}/dex-volumes")
         fun getDexVolumes(
             @Header("authorization") auth: String?,
-            @Query("coin_uid") coinUid: String,
+            @Path("coinUid") coinUid: String,
+            @Query("currency") currencyCode: String,
             @Query("interval") interval: String
-        ): Single<DexVolumesResponse>
+        ): Single<List<Analytics.VolumePoint>>
 
-        @GET("transactions")
+        @GET("analytics/{coinUid}/transactions")
         fun getTransactions(
             @Header("authorization") auth: String?,
-            @Query("coin_uid") coinUid: String,
+            @Path("coinUid") coinUid: String,
             @Query("interval") interval: String,
             @Query("platform") platform: String?
-        ): Single<TransactionsDataResponse>
+        ): Single<List<Analytics.CountVolumePoint>>
 
-        @GET("addresses")
+        @GET("analytics/{coinUid}/addresses")
         fun getActiveAddresses(
             @Header("authorization") auth: String?,
-            @Query("coin_uid") coinUid: String,
+            @Path("coinUid") coinUid: String,
             @Query("interval") interval: String
-        ): Single<ActiveAddressesDataResponse>
+        ): Single<List<Analytics.CountPoint>>
 
         @GET("defi-protocols/{coinUid}/tvls")
         fun getMarketInfoTvl(
@@ -384,10 +406,11 @@ class HsProvider(baseUrl: String, apiKey: String) {
             @Query("blockchain") blockchain: String?
         ): Single<List<MarketInfoTvlResponse>>
 
-        @GET("addresses/holders")
-        fun getTopHolders(
-            @Query("coin_uid") coinUid: String
-        ): Single<List<TokenHolder>>
+        @GET("analytics/{coinUid}/holders")
+        fun getTokenHolders(
+            @Path("coinUid") coinUid: String,
+            @Query("blockchain_uid") blockchainUid: String
+        ): Single<TokenHolders>
 
         @GET("funds/treasuries")
         fun getCoinTreasuries(
@@ -452,6 +475,29 @@ class HsProvider(baseUrl: String, apiKey: String) {
         @GET("tokens/list")
         fun getAllTokens(): Single<List<TokenResponse>>
 
+        @GET("analytics/{coinUid}/preview")
+        fun getAnalyticsPreview(
+            @Path("coinUid") coinUid: String,
+        ): Single<AnalyticsPreview>
+
+        @GET("analytics/{coinUid}")
+        fun getAnalyticsData(
+            @Path("coinUid") coinUid: String,
+            @Query("currency") currencyCode: String,
+        ): Single<Analytics>
+
+        @GET("analytics/ranks")
+        fun getRankValue(
+            @Query("type") type: String,
+            @Query("currency") currencyCode: String,
+        ): Single<List<RankValue>>
+
+        @GET("analytics/ranks")
+        fun getRankMultiValue(
+            @Query("type") type: String,
+            @Query("currency") currencyCode: String,
+        ): Single<List<RankMultiValue>>
+
         companion object {
             private const val marketInfoFields =
                 "name,code,price,price_change_24h,market_cap_rank,coingecko_id,market_cap,market_cap_rank,total_volume"
@@ -472,6 +518,8 @@ data class HistoricalCoinPriceResponse(
     val price: BigDecimal,
 )
 
+data class PriceChartStart(val timestamp: Long)
+
 data class ChartCoinPriceResponse(
     val timestamp: Long,
     val price: BigDecimal,
@@ -483,7 +531,7 @@ data class ChartCoinPriceResponse(
             return ChartPoint(
                 price,
                 timestamp,
-                totalVolume?.let { mapOf(ChartPointType.Volume to it) } ?: emptyMap()
+                totalVolume
             )
         }
 }
