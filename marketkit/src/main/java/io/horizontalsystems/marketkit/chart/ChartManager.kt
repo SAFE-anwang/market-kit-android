@@ -98,19 +98,34 @@ class ChartManager(
     ): Single<ChartInfo> {
         val fullCoin = coinManager.fullCoins(listOf(coinUid)).firstOrNull()
             ?: return Single.error(NoChartData())
+        return if (coinUid == "safe-coin") {
+            provider.coinSafePriceChartSingle(
+                "safe-anwang",
+                currencyCode,
+                interval,
+                indicatorPoints
+            )
+                .flatMap { response ->
+                    val points = response.map { it.chartPoint }
 
-        return provider.coinPriceChartSingle(
-            fullCoin.coin.uid,
-            currencyCode,
-            interval,
-            indicatorPoints
-        )
-            .flatMap { response ->
-                val points = response.map { it.chartPoint }
+                    chartInfo(points, interval)?.let {
+                        Single.just(it)
+                    } ?: Single.error(NoChartData())
+                }
+        } else {
+            provider.coinPriceChartSingle(
+                fullCoin.coin.uid,
+                currencyCode,
+                interval,
+                indicatorPoints
+            )
+                .flatMap { response ->
+                    val points = response.map { it.chartPoint }
 
-                chartInfo(points, interval)?.let {
-                    Single.just(it)
-                } ?: Single.error(NoChartData())
-            }
+                    chartInfo(points, interval)?.let {
+                        Single.just(it)
+                    } ?: Single.error(NoChartData())
+                }
+        }
     }
 }

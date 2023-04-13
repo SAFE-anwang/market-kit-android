@@ -105,57 +105,65 @@ class CoinManager(
         currencyCode: String,
         language: String
     ): Single<MarketInfoOverview> {
-        return hsProvider.getMarketInfoOverview(coinUid, currencyCode, language).map { rawOverview ->
-            val fullCoin = fullCoin(coinUid) ?: throw Exception("No Full Coin")
+        return if (coinUid == "safe-coin") {
+            hsProvider.getSafeMarketInfoOverview("safe-anwang", currencyCode, language).map { rawOverview ->
+                val fullCoin = fullCoin(coinUid) ?: throw Exception("No Full Coin")
 
-            // 获取Safe信息
-            var coinGeckoInfo: CoinGeckoMarketResponse? = null
-            if (coinUid == "safe-coin") {
-                coinGeckoInfo = hsProvider.getCoinGeckoMarketInfoOverview("safe-anwang").blockingGet()
+                rawOverview.marketInfoOverview(fullCoin)
             }
-            /*val categoriesMap = categoryManager.coinCategories(overviewRaw.categoryIds)
-                .map { it.uid to it }
-                .toMap()*/
+        } else {
+            hsProvider.getMarketInfoOverview(coinUid, currencyCode, language).map { rawOverview ->
+                val fullCoin = fullCoin(coinUid) ?: throw Exception("No Full Coin")
 
-            val performance = rawOverview.performance.map { (vsCurrency, v) ->
-                vsCurrency to v.mapNotNull { (timePeriodRaw, performance) ->
-                    if (performance == null) return@mapNotNull null
+                // 获取Safe信息
+                var coinGeckoInfo: CoinGeckoMarketResponse? = null
+                if (coinUid == "safe-coin") {
+                    coinGeckoInfo = hsProvider.getCoinGeckoMarketInfoOverview("safe-anwang").blockingGet()
+                }
+                /*val categoriesMap = categoryManager.coinCategories(overviewRaw.categoryIds)
+                    .map { it.uid to it }
+                    .toMap()*/
 
-                    val timePeriod = when (timePeriodRaw) {
-                        "7d" -> HsTimePeriod.Week1
-                        "30d" -> HsTimePeriod.Month1
-                        else -> return@mapNotNull null
-                    }
+                val performance = rawOverview.performance.map { (vsCurrency, v) ->
+                    vsCurrency to v.mapNotNull { (timePeriodRaw, performance) ->
+                        if (performance == null) return@mapNotNull null
 
-                    timePeriod to performance
+                        val timePeriod = when (timePeriodRaw) {
+                            "7d" -> HsTimePeriod.Week1
+                            "30d" -> HsTimePeriod.Month1
+                            else -> return@mapNotNull null
+                        }
+
+                        timePeriod to performance
+                    }.toMap()
                 }.toMap()
-            }.toMap()
 
-            val links = rawOverview.links
-                .mapNotNull { (linkTypeRaw, link) ->
-                    LinkType.fromString(linkTypeRaw)?.let {
-                        it to link
-                    }
-                }.toMap().toMutableMap()
+                val links = rawOverview.links
+                    .mapNotNull { (linkTypeRaw, link) ->
+                        LinkType.fromString(linkTypeRaw)?.let {
+                            it to link
+                        }
+                    }.toMap().toMutableMap()
 
-            coinGeckoInfo?.let {
-                if(it.links.homepage.size > 0) {
-                    links[LinkType.Website] = it.links.homepage[0]
-                }
-                it.links.twitter?.let {
-                    links[LinkType.Twitter] = it
-                }
-                it.links.telegram?.let {
-                    links[LinkType.Telegram] = it
-                }
-                it.links.repos_url?.let {
-                    if (it.containsKey("github") && it["github"]?.size!! > 0) {
-                        links[LinkType.Github] = it["github"]!![0]
+                coinGeckoInfo?.let {
+                    if(it.links.homepage.size > 0) {
+                        links[LinkType.Website] = it.links.homepage[0]
+                    }
+                    it.links.twitter?.let {
+                        links[LinkType.Twitter] = it
+                    }
+                    it.links.telegram?.let {
+                        links[LinkType.Telegram] = it
+                    }
+                    it.links.repos_url?.let {
+                        if (it.containsKey("github") && it["github"]?.size!! > 0) {
+                            links[LinkType.Github] = it["github"]!![0]
+                        }
                     }
                 }
+
+                rawOverview.marketInfoOverview(fullCoin)
             }
-
-            rawOverview.marketInfoOverview(fullCoin)
         }
     }
 

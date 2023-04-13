@@ -18,6 +18,11 @@ class HsProvider(baseUrl: String, apiKey: String) {
             .create(MarketService::class.java)
     }
 
+    private val safeService by lazy {
+        RetrofitUtils.buildUnsafe("https://safewallet.anwang.com/v1/")
+            .create(MarketService::class.java)
+    }
+
     private val coinGeckoService by lazy {
         RetrofitUtils.build("https://api.coingecko.com/api/v3/").create(CoinGeckoProvider.CoinGeckoService::class.java)
     }
@@ -256,6 +261,39 @@ class HsProvider(baseUrl: String, apiKey: String) {
     fun allTokensSingle(): Single<List<TokenResponse>> {
         return service.getAllTokens()
     }
+
+
+    fun getSafeMarketInfoOverview(
+        coinUid: String,
+        currencyCode: String,
+        language: String,
+    ): Single<MarketInfoOverviewRaw> {
+        return safeService.getMarketInfoOverview(coinUid, currencyCode, language)
+    }
+
+    fun getSafeCoinPrices(coinUids: List<String>, currencyCode: String): Single<List<CoinPrice>> {
+        return safeService.getCoinPrices(coinUids.joinToString(separator = ","), currencyCode)
+            .map { coinPrices ->
+                coinPrices.mapNotNull { coinPriceResponse ->
+                    coinPriceResponse.coinPrice(currencyCode)
+                }
+            }
+    }
+
+    fun coinSafePriceChartSingle(
+        coinUid: String,
+        currencyCode: String,
+        interval: HsTimePeriod,
+        indicatorPoints: Int
+    ): Single<List<ChartCoinPriceResponse>> {
+        val currentTime = Date().time / 1000
+        val fromTimestamp =
+            HsChartRequestHelper.fromTimestamp(currentTime, interval, indicatorPoints)
+        val pointInterval = HsChartRequestHelper.pointInterval(interval).value
+
+        return safeService.getCoinPriceChart(coinUid, currencyCode, fromTimestamp, pointInterval)
+    }
+
 
     private interface MarketService {
 

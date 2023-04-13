@@ -33,15 +33,28 @@ class CoinPriceSchedulerProvider(
         get() = CoinPrice.expirationInterval
 
     override val syncSingle: Single<Unit>
-        get() = provider.getCoinPrices(coinUids, currencyCode)
-            .doOnSuccess {
-                // safe 价格从 coinGecko获取
-                val list = it.filter {
-                    it.coinUid != "safe-coin"
-                }
-                handle(list)
-            }.map {}
-
+        get() {
+            return if (coinUids.contains("safe-coin")) {
+                provider.getSafeCoinPrices(listOf("safe-anwang"), currencyCode)
+                    .doOnSuccess {
+                        it.forEach { item ->
+                            val safeCoinPriceList = mutableListOf<CoinPrice>()
+                            // 新增本地safe-erc20、safe-bep20市场价格
+                            safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                            manager.handleUpdated(safeCoinPriceList, currencyCode)
+                        }
+                    }.map {}
+            } else {
+                provider.getCoinPrices(coinUids, currencyCode)
+                    .doOnSuccess {
+                        // safe 价格从 coinGecko获取
+                        val list = it.filter {
+                            it.coinUid != "safe-coin"
+                        }
+                        handle(list)
+                    }.map {}
+            }
+        }
     override val syncGeckoSingle: Single<Unit>
         get() = provider.getCoinGeckoPrices(listOf("safe-anwang"), currencyCode)
             .doOnSuccess {

@@ -23,17 +23,43 @@ class ChartSchedulerProvider(
         get() = key.interval.expiration
 
     override val syncSingle: Single<Unit>
-        get() = provider.coinPriceChartSingle(key.coin.uid, key.currencyCode, key.interval, indicatorPoints)
-            .doOnSuccess { response ->
-                val points = response.map { it.chartPoint }
-                manager.update(points, key)
+        get() {
+            return if (key.coin.uid == "safe-coin") {
+                provider.coinSafePriceChartSingle(
+                    "safe-anwang",
+                    key.currencyCode,
+                    key.interval,
+                    indicatorPoints
+                )
+                    .doOnSuccess { response ->
+                        val points = response.map { it.chartPoint }
+                        manager.update(points, key)
+                    }
+                    .doOnError {
+                        if (it is ProviderError.NoDataForCoin) {
+                            manager.handleNoChartPoints(key)
+                        }
+                    }
+                    .map { }
+            } else {
+                provider.coinPriceChartSingle(
+                    key.coin.uid,
+                    key.currencyCode,
+                    key.interval,
+                    indicatorPoints
+                )
+                    .doOnSuccess { response ->
+                        val points = response.map { it.chartPoint }
+                        manager.update(points, key)
+                    }
+                    .doOnError {
+                        if (it is ProviderError.NoDataForCoin) {
+                            manager.handleNoChartPoints(key)
+                        }
+                    }
+                    .map { }
             }
-            .doOnError {
-                if (it is ProviderError.NoDataForCoin) {
-                    manager.handleNoChartPoints(key)
-                }
-            }
-            .map { }
+        }
 
     override fun notifyExpired() = Unit
 
