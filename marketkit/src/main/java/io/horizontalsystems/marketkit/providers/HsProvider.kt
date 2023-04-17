@@ -294,6 +294,10 @@ class HsProvider(baseUrl: String, apiKey: String) {
         return safeService.getCoinPriceChart(coinUid, currencyCode, fromTimestamp, pointInterval)
     }
 
+    fun getSafeMarketInfoDetails(coinUid: String, currency: String): Single<MarketInfoDetailsResponse> {
+        return safeService.getMarketInfoDetails(coinUid, currency)
+    }
+
 
     private interface MarketService {
 

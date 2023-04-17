@@ -13,6 +13,10 @@ class CoinGeckoProvider(private val baseUrl: String) {
         RetrofitUtils.build(baseUrl).create(CoinGeckoService::class.java)
     }
 
+    private val safeService: CoinGeckoService by lazy {
+        RetrofitUtils.buildUnsafe("https://safewallet.anwang.com/v1/").create(CoinGeckoService::class.java)
+    }
+
     fun exchangesSingle(limit: Int, page: Int): Single<List<Exchange>> {
         return coinGeckoService.exchanges(limit, page)
             .map { list ->
@@ -36,6 +40,20 @@ class CoinGeckoProvider(private val baseUrl: String) {
     fun getCoinPrice(coinIds: String, currency: String): Single<List<GeckoCoinPriceResponse>> {
         return coinGeckoService.getCoinPrice(coinIds, currency)
     }
+
+    fun marketTickersSingleSafe(coinGeckoId: String): Single<CoinGeckoCoinResponse> {
+        val coinGeckoUid = if (coinGeckoId == "safe-coin") "safe-anwang" else coinGeckoId
+        return safeService.marketTickers(
+            coinGeckoUid,
+            "true",
+            "false",
+            "false",
+            "false",
+            "false",
+            "false",
+        )
+    }
+
 
     interface CoinGeckoService {
 

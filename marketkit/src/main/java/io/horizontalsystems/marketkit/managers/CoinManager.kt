@@ -169,15 +169,25 @@ class CoinManager(
 
     fun marketTickersSingle(coinUid: String): Single<List<MarketTicker>> {
         val coinGeckoId = storage.coin(coinUid)?.coinGeckoId ?: return Single.just(emptyList())
-
-        return coinGeckoProvider.marketTickersSingle(coinGeckoId)
-            .map { response ->
-                val coinUids =
-                    (response.tickers.map { it.coinId } + response.tickers.mapNotNull { it.targetCoinId }).distinct()
-                val coins = storage.coins(coinUids)
-                val imageUrls = exchangeManager.imageUrlsMap(response.exchangeIds)
-                response.marketTickers(imageUrls, coins)
-            }
+        return if (coinUid == "safe-anwang") {
+            coinGeckoProvider.marketTickersSingleSafe(coinGeckoId)
+                .map { response ->
+                    val coinUids =
+                        (response.tickers.map { it.coinId } + response.tickers.mapNotNull { it.targetCoinId }).distinct()
+                    val coins = storage.coins(coinUids)
+                    val imageUrls = exchangeManager.imageUrlsMap(response.exchangeIds)
+                    response.marketTickers(imageUrls, coins)
+                }
+        } else {
+            coinGeckoProvider.marketTickersSingle(coinGeckoId)
+                .map { response ->
+                    val coinUids =
+                        (response.tickers.map { it.coinId } + response.tickers.mapNotNull { it.targetCoinId }).distinct()
+                    val coins = storage.coins(coinUids)
+                    val imageUrls = exchangeManager.imageUrlsMap(response.exchangeIds)
+                    response.marketTickers(imageUrls, coins)
+                }
+        }
     }
 
     fun defiMarketInfosSingle(currencyCode: String): Single<List<DefiMarketInfo>> {
@@ -187,8 +197,14 @@ class CoinManager(
     }
 
     fun marketInfoDetailsSingle(coinUid: String, currency: String): Single<MarketInfoDetails> {
-        return hsProvider.getMarketInfoDetails(coinUid, currency).map {
-            MarketInfoDetails(it)
+        return if (coinUid == "safe-coin") {
+            hsProvider.getSafeMarketInfoDetails("safe-anwang", currency).map {
+                MarketInfoDetails(it)
+            }
+        } else {
+            hsProvider.getMarketInfoDetails(coinUid, currency).map {
+                MarketInfoDetails(it)
+            }
         }
     }
 
