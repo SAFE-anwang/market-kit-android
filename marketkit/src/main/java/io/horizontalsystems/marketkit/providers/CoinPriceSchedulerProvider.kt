@@ -45,7 +45,11 @@ class CoinPriceSchedulerProvider(
                         }
                     }.map {}
             } else {
-                val safePrice = provider.getSafeCoinPrices(listOf("safe-anwang"), currencyCode).blockingGet()
+                val safePrice = try {
+                    provider.getSafeCoinPrices(listOf("safe-anwang"), currencyCode).blockingGet()
+                } catch (e: Exception) {
+                    null
+                }
 
                 provider.getCoinPrices(coinUids, currencyCode)
                     .doOnSuccess {
