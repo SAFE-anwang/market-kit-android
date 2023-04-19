@@ -34,7 +34,7 @@ class CoinPriceSchedulerProvider(
 
     override val syncSingle: Single<Unit>
         get() {
-            return if (coinUids.contains("safe-coin")) {
+            return if (coinUids.contains("safe-coin") && coinUids.size == 1) {
                 provider.getSafeCoinPrices(listOf("safe-anwang"), currencyCode)
                     .doOnSuccess {
                         it.forEach { item ->
@@ -45,13 +45,16 @@ class CoinPriceSchedulerProvider(
                         }
                     }.map {}
             } else {
+                val safePrice = provider.getSafeCoinPrices(listOf("safe-anwang"), currencyCode).blockingGet()
+
                 provider.getCoinPrices(coinUids, currencyCode)
                     .doOnSuccess {
-                        // safe 价格从 coinGecko获取
-                        val list = it.filter {
-                            it.coinUid != "safe-coin"
+                        val priceList = mutableListOf<CoinPrice>()
+                        safePrice?.forEach {
+                            priceList.add(it.copy(coinUid = "safe-coin"))
                         }
-                        handle(list)
+                        priceList.addAll(it)
+                        handle(priceList)
                     }.map {}
             }
         }
