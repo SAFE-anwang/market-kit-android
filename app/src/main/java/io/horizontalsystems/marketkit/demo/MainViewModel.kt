@@ -452,7 +452,7 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
 
     fun runAnalyticsPreview() {
         val chain = "ethereum"
-        marketKit.analyticsPreviewSingle(chain)
+        marketKit.analyticsPreviewSingle(chain, listOf())
             .subscribeOn(Schedulers.io())
             .subscribe({ data ->
                 Log.e("AAA", "cexVolume rank30d: ${data.cexVolume?.rank30d} points: ${data.cexVolume?.points} dexVolume rank30d: ${data.dexVolume?.rank30d} points: ${data.dexVolume?.points} ")
@@ -467,7 +467,8 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
     fun runAnalytics() {
         val chain = "ethereum"
         val currencyCode = "usd"
-        marketKit.analyticsSingle(chain, currencyCode)
+        val authToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiMHgwYmRhYjg2YWZmODhjZWM1ZTc0NTQyNWMzNDRjNjRjMDczYWYwZGM0IiwibG9naW5EYXRlIjoxNjg1NDM4NTcyNTQ0LCJpYXQiOjE2ODU0Mzg1NzIsImV4cCI6MTY4NjIyNTY1Mn0.eE-qoxOBw9ac0fRw0ZeUc6vldRUetL6UK9UK36RJpM4"
+        marketKit.analyticsSingle(chain, currencyCode, authToken)
             .subscribeOn(Schedulers.io())
             .subscribe({ data ->
                 Log.e("AAA", "cexVolume rank30d: ${data.cexVolume?.rank30d} points.size: ${data.cexVolume?.points?.size} transactions volume30d: ${data.transactions?.volume30d} points.size: ${data.transactions?.points?.size} ")
@@ -524,6 +525,24 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
                 }
             }, {
                 Log.e("AAA", "runRevenueRanks error", it)
+            }).let {
+                disposables.add(it)
+            }
+    }
+
+    fun runHoldersRanks() {
+        val currencyCode = "usd"
+        marketKit.holderRanksSingle(currencyCode)
+            .subscribeOn(Schedulers.io())
+            .subscribe({ data ->
+                data.forEach { item ->
+                    Log.e(
+                        "AAA",
+                        "runHoldersRanks value1d: value: ${item.value} uid: ${item.uid} "
+                    )
+                }
+            }, {
+                Log.e("AAA", "runHoldersRanks error", it)
             }).let {
                 disposables.add(it)
             }

@@ -29,9 +29,6 @@ sealed class BlockchainType : Parcelable {
     object Ethereum : BlockchainType()
 
     @Parcelize
-    object EthereumGoerli : BlockchainType()
-
-    @Parcelize
     object BinanceSmartChain : BlockchainType()
 
     @Parcelize
@@ -59,6 +56,9 @@ sealed class BlockchainType : Parcelable {
     object Fantom : BlockchainType()
 
     @Parcelize
+    object Tron: BlockchainType()
+
+    @Parcelize
     class Unsupported(val _uid: String) : BlockchainType()
 
     val uid: String
@@ -71,7 +71,6 @@ sealed class BlockchainType : Parcelable {
             is Safe -> "safe-coin"
             is Zcash -> "zcash"
             is Ethereum -> "ethereum"
-            is EthereumGoerli -> "ethereum-goerli"
             is BinanceSmartChain -> "binance-smart-chain"
             is BinanceChain -> "binancecoin"
             is Polygon -> "polygon-pos"
@@ -81,6 +80,7 @@ sealed class BlockchainType : Parcelable {
             is Solana -> "solana"
             is Gnosis -> "gnosis"
             is Fantom -> "fantom"
+            is Tron -> "tron"
             is Unsupported -> this._uid
         }
 
@@ -101,7 +101,6 @@ sealed class BlockchainType : Parcelable {
         Safe -> "safe-coin"
         Zcash -> "zcash"
         Ethereum -> "ethereum"
-        EthereumGoerli -> "ethereum-goerli"
         BinanceSmartChain -> "binanceSmartChain"
         Polygon -> "polygon"
         Avalanche -> "avalanche"
@@ -111,6 +110,7 @@ sealed class BlockchainType : Parcelable {
         Solana -> "solana"
         Gnosis -> "gnosis"
         Fantom -> "fantom"
+        Tron -> "tron"
         is Unsupported -> "unsupported|$uid"
     }
 
@@ -126,7 +126,6 @@ sealed class BlockchainType : Parcelable {
                 "safe-coin" -> Safe
                 "zcash" -> Zcash
                 "ethereum" -> Ethereum
-                "ethereum-goerli" -> EthereumGoerli
                 "binance-smart-chain" -> BinanceSmartChain
                 "binancecoin" -> BinanceChain
                 "polygon-pos" -> Polygon
@@ -136,6 +135,7 @@ sealed class BlockchainType : Parcelable {
                 "solana" -> Solana
                 "gnosis" -> Gnosis
                 "fantom" -> Fantom
+                "tron" -> Tron
                 else -> Unsupported(uid)
             }
 

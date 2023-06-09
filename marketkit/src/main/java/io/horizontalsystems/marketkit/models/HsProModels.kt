@@ -96,6 +96,8 @@ data class Analytics(
     val fundsInvested: BigDecimal?,
     val treasuries: BigDecimal?,
     val holders: List<HolderBlockchain>?,
+    @SerializedName("holders_rank")
+    val holdersRank: Int?,
 ) {
 
     data class ExVolume(
@@ -218,6 +220,7 @@ data class Analytics(
 }
 
 data class AnalyticsPreview(
+    val subscriptions: List<SubscriptionResponse>?,
     @SerializedName("cex_volume")
     val cexVolume: VolumePreview?,
     @SerializedName("dex_volume")
@@ -233,7 +236,14 @@ data class AnalyticsPreview(
     val fundsInvested: Boolean = false,
     val treasuries: Boolean = false,
     val holders: Boolean = false,
+    @SerializedName("holders_rank")
+    val holdersRank: Boolean = false,
 ) {
+
+    data class SubscriptionResponse(
+        val address: String,
+        val deadline: Long
+    )
 
     data class VolumePreview(
         @SerializedName("rank_30d")

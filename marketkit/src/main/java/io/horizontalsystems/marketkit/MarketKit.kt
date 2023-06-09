@@ -235,12 +235,12 @@ class MarketKit(
         return hsProvider.activeAddressesSingle(coinUid, timePeriod, sessionKey)
     }
 
-    fun analyticsPreviewSingle(coinUid: String): Single<AnalyticsPreview> {
-        return hsProvider.analyticsPreviewSingle(coinUid)
+    fun analyticsPreviewSingle(coinUid: String, addresses: List<String>): Single<AnalyticsPreview> {
+        return hsProvider.analyticsPreviewSingle(coinUid, addresses)
     }
 
-    fun analyticsSingle(coinUid: String, currencyCode: String): Single<Analytics> {
-        return hsProvider.analyticsSingle(coinUid, currencyCode)
+    fun analyticsSingle(coinUid: String, currencyCode: String, authToken: String): Single<Analytics> {
+        return hsProvider.analyticsSingle(coinUid, currencyCode, authToken)
     }
 
     fun cexVolumeRanksSingle(currencyCode: String): Single<List<RankMultiValue>> {
@@ -261,6 +261,10 @@ class MarketKit(
 
     fun transactionCountsRanksSingle(currencyCode: String): Single<List<RankMultiValue>> {
         return hsProvider.rankMultiValueSingle("tx_count", currencyCode)
+    }
+
+    fun holderRanksSingle(currencyCode: String): Single<List<RankValue>> {
+        return hsProvider.rankValueSingle("holders", currencyCode)
     }
 
     fun revenueRanksSingle(currencyCode: String): Single<List<RankMultiValue>> {
@@ -324,6 +328,16 @@ class MarketKit(
     // NFT
 
     suspend fun nftTopCollections(): List<NftTopCollection> = nftManager.topCollections()
+
+    // Auth
+
+    fun authGetSignMessage(address: String): Single<String> {
+        return hsProvider.authGetSignMessage(address)
+    }
+
+    fun authenticate(signature: String, address: String): Single<String> {
+        return hsProvider.authenticate(signature, address)
+    }
 
     //Misc
 
