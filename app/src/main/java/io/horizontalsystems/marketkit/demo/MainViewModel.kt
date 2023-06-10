@@ -10,6 +10,7 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
     private val disposables = CompositeDisposable()
@@ -86,18 +87,29 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
     fun runGetChartInfo() {
         val coinUid = "ethereum"
         val currencyCode = "USD"
-        val interval = HsTimePeriod.Month1
-        //get stored chart info
-        val storedChartInfo = marketKit.chartInfo(coinUid, currencyCode, interval)
-        Log.w("AAA", "storedChartInfo: ${storedChartInfo?.points}")
+
+        val time = Date().time / 1000 - TimeUnit.DAYS.toSeconds(7)
+
+        val interval = HsPeriodType.ByStartTime(time)
 
         //fetch chartInfo from API
-        marketKit.getChartInfoAsync(coinUid, currencyCode, interval)
+        marketKit.chartPointsSingle(coinUid, currencyCode, interval)
             .subscribeOn(Schedulers.io())
             .subscribe({
-                Log.w("AAA", "fetchChartInfo: ${it.points}")
+                Log.w("AAA", "fetchChartInfo: ${it}")
             }, {
                 Log.e("AAA", "fetchChartInfo Error", it)
+            })
+            .let {
+                disposables.add(it)
+            }
+
+        marketKit.chartStartTimeSingle(coinUid)
+            .subscribeOn(Schedulers.io())
+            .subscribe({
+                Log.w("AAA", "chartStartTimeSingle: $it")
+            }, {
+                Log.e("AAA", "chartStartTimeSingle Error", it)
 
             })
             .let {
@@ -433,6 +445,104 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
                 }
             }, {
                 Log.e("AAA", "runTopPlatformCoinList error", it)
+            }).let {
+                disposables.add(it)
+            }
+    }
+
+    fun runAnalyticsPreview() {
+        val chain = "ethereum"
+        marketKit.analyticsPreviewSingle(chain, listOf())
+            .subscribeOn(Schedulers.io())
+            .subscribe({ data ->
+                Log.e("AAA", "cexVolume rank30d: ${data.cexVolume?.rank30d} points: ${data.cexVolume?.points} dexVolume rank30d: ${data.dexVolume?.rank30d} points: ${data.dexVolume?.points} ")
+                Log.e("AAA", "fundsInvested: ${data.fundsInvested} holders: ${data.holders} ")
+            }, {
+                Log.e("AAA", "runAnalyticsPreview error", it)
+            }).let {
+                disposables.add(it)
+            }
+    }
+
+    fun runAnalytics() {
+        val chain = "ethereum"
+        val currencyCode = "usd"
+        val authToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiMHgwYmRhYjg2YWZmODhjZWM1ZTc0NTQyNWMzNDRjNjRjMDczYWYwZGM0IiwibG9naW5EYXRlIjoxNjg1NDM4NTcyNTQ0LCJpYXQiOjE2ODU0Mzg1NzIsImV4cCI6MTY4NjIyNTY1Mn0.eE-qoxOBw9ac0fRw0ZeUc6vldRUetL6UK9UK36RJpM4"
+        marketKit.analyticsSingle(chain, currencyCode, authToken)
+            .subscribeOn(Schedulers.io())
+            .subscribe({ data ->
+                Log.e("AAA", "cexVolume rank30d: ${data.cexVolume?.rank30d} points.size: ${data.cexVolume?.points?.size} transactions volume30d: ${data.transactions?.volume30d} points.size: ${data.transactions?.points?.size} ")
+                Log.e("AAA", "fundsInvested: ${data.fundsInvested} holders.size: ${data.holders?.size} ")
+            }, {
+                Log.e("AAA", "runAnalyticsPreview error", it)
+            }).let {
+                disposables.add(it)
+            }
+    }
+
+    fun runTokenHolders() {
+        val coinUid = "uniswap"
+        val blockchainUid = "ethereum"
+        marketKit.tokenHoldersSingle(coinUid, blockchainUid)
+            .subscribeOn(Schedulers.io())
+            .subscribe({ data ->
+                Log.e("AAA", "runTokenHolders count: ${data.count} url: ${data.holdersUrl} holders.size: ${data.topHolders.size} ")
+                data.topHolders.forEach { holder ->
+                    Log.e("AAA", "Holder: address: ${holder.address} percentage: ${holder.percentage} ")
+                }
+            }, {
+                Log.e("AAA", "runAnalyticsPreview error", it)
+            }).let {
+                disposables.add(it)
+            }
+    }
+
+    fun runDexLiquidityRanks() {
+        val currencyCode = "usd"
+        marketKit.dexLiquidityRanksSingle(currencyCode)
+            .subscribeOn(Schedulers.io())
+            .subscribe({ data ->
+                data.forEach { item ->
+                    Log.e("AAA", "runDexLiquidityRanks value: ${item.value} uid: ${item.uid} ")
+                }
+            }, {
+                Log.e("AAA", "runDexLiquidityRanks error", it)
+            }).let {
+                disposables.add(it)
+            }
+    }
+
+    fun runRevenueRanks() {
+        val currencyCode = "usd"
+        marketKit.revenueRanksSingle(currencyCode)
+            .subscribeOn(Schedulers.io())
+            .subscribe({ data ->
+                data.forEach { item ->
+                    Log.e(
+                        "AAA",
+                        "runRevenueRanks value1d: ${item.value1d} value7d: ${item.value7d} uid: ${item.uid} "
+                    )
+                }
+            }, {
+                Log.e("AAA", "runRevenueRanks error", it)
+            }).let {
+                disposables.add(it)
+            }
+    }
+
+    fun runHoldersRanks() {
+        val currencyCode = "usd"
+        marketKit.holderRanksSingle(currencyCode)
+            .subscribeOn(Schedulers.io())
+            .subscribe({ data ->
+                data.forEach { item ->
+                    Log.e(
+                        "AAA",
+                        "runHoldersRanks value1d: value: ${item.value} uid: ${item.uid} "
+                    )
+                }
+            }, {
+                Log.e("AAA", "runHoldersRanks error", it)
             }).let {
                 disposables.add(it)
             }
