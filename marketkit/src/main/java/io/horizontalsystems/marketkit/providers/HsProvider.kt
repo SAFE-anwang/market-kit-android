@@ -284,15 +284,10 @@ class HsProvider(baseUrl: String, apiKey: String) {
     fun coinSafePriceChartSingle(
         coinUid: String,
         currencyCode: String,
-        interval: HsTimePeriod,
-        indicatorPoints: Int
+        periodType: HsPointTimePeriod,
+        fromTimestamp: Long?
     ): Single<List<ChartCoinPriceResponse>> {
-        val currentTime = Date().time / 1000
-        val fromTimestamp =
-            HsChartRequestHelper.fromTimestamp(currentTime, interval, indicatorPoints)
-        val pointInterval = HsChartRequestHelper.pointInterval(interval).value
-
-        return safeService.getCoinPriceChart(coinUid, currencyCode, fromTimestamp, pointInterval)
+        return safeService.getCoinPriceChart(coinUid, currencyCode, fromTimestamp, periodType.value)
     }
 
     fun getSafeMarketInfoDetails(coinUid: String, currency: String): Single<MarketInfoDetailsResponse> {

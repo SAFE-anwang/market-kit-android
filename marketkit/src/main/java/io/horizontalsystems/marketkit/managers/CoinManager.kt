@@ -198,50 +198,6 @@ class CoinManager(
         }
     }
 
-    fun marketInfoDetailsSingle(coinUid: String, currency: String): Single<MarketInfoDetails> {
-        return if (coinUid == "safe-coin") {
-            hsProvider.getSafeMarketInfoDetails("safe-anwang", currency).map {
-                MarketInfoDetails(it)
-            }
-        } else {
-            hsProvider.getMarketInfoDetails(coinUid, currency).map {
-                MarketInfoDetails(it)
-            }
-        }
-    }
-
-    fun marketInfoTvlSingle(
-        coinUid: String,
-        currencyCode: String,
-        timePeriod: HsTimePeriod
-    ): Single<List<ChartPoint>> {
-        return hsProvider.marketInfoTvlSingle(coinUid, currencyCode, timePeriod)
-    }
-
-    fun marketInfoGlobalTvlSingle(
-        chain: String,
-        currencyCode: String,
-        timePeriod: HsTimePeriod
-    ): Single<List<ChartPoint>> {
-        return hsProvider.marketInfoGlobalTvlSingle(chain, currencyCode, timePeriod)
-    }
-
-    fun topHoldersSingle(coinUid: String): Single<List<TokenHolder>> {
-        return hsProvider.topHoldersSingle(coinUid)
-    }
-
-    fun treasuriesSingle(coinUid: String, currencyCode: String): Single<List<CoinTreasury>> {
-        return hsProvider.coinTreasuriesSingle(coinUid, currencyCode)
-    }
-
-    fun investmentsSingle(coinUid: String): Single<List<CoinInvestment>> {
-        return hsProvider.investmentsSingle(coinUid)
-    }
-
-    fun coinReportsSingle(coinUid: String): Single<List<CoinReport>> {
-        return hsProvider.coinReportsSingle(coinUid)
-    }
-
     fun auditReportsSingle(addresses: List<String>): Single<List<Auditor>> {
         return defiYieldProvider.auditReportsSingle(addresses)
     }
