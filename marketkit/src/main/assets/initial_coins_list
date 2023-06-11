@@ -7305,7 +7305,7 @@ INSERT INTO Coin VALUES('pepe-coin-bsc','Pepe Coin BSC ','PPC',NULL,'pepe-coin-b
 INSERT INTO Coin VALUES('sui-iou','Sui (IOU)','SUI',NULL,'sui-iou');
 INSERT INTO Coin VALUES('sui','Sui','SUI',99,'sui');
 INSERT INTO Coin VALUES('turbo','Turbo','TURBO',997,'turbo');
-INSERT INTO Coin VALUES('safe-coin','SAFE','SAFE',20,'safe-anwang');
+INSERT INTO Coin VALUES('safe-coin','SAFE','SAFE',1,'safe-anwang');
 INSERT INTO TokenEntity VALUES('safe-coin','safe-coin','native',8,NULL);
 INSERT INTO TokenEntity VALUES('safe-coin','ethereum','eip20',18,'0xee9c1ea4dcf0aaf4ff2d78b6ff83aa69797b65eb');
 INSERT INTO TokenEntity VALUES('safe-coin','binance-smart-chain','eip20',18,'0x4d7fa587ec8e50bd0e9cd837cb4da796f47218a1');

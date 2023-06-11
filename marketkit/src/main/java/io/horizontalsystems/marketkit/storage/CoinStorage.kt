@@ -117,7 +117,7 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
             tokenEntities.forEach { coinDao.insert(it) }
 
             // insert safe
-            val safeCoin = Coin("safe-coin", "SAFE", "SAFE",20,"safe-anwang")
+            val safeCoin = Coin("safe-coin", "SAFE", "SAFE",1,"safe-anwang")
 //            val safeErc = Coin("safe-coin", "SAFE", "SAFE",20,"safe-anwang")
 //            val safeBep = Coin("custom_safe-erc20-SAFE", "SAFE", "SAFE",20,"safe-anwang")
             coinDao.insert(safeCoin)
