@@ -211,6 +211,10 @@ class HsProvider(baseUrl: String, apiKey: String) {
             "false")
     }
 
+    fun coinSafePriceChartStartTime(coinUid: String): Single<Long> {
+        return safeService.getCoinPriceChartStart(coinUid).map { it.timestamp }
+    }
+
     fun topPlatformsSingle(currencyCode: String): Single<List<TopPlatformResponse>> {
         return service.getTopPlatforms(currencyCode)
     }
@@ -299,8 +303,16 @@ class HsProvider(baseUrl: String, apiKey: String) {
         return service.getAnalyticsPreview(coinUid, addresses.joinToString(","))
     }
 
+    fun safeAnalyticsPreviewSingle(coinUid: String, addresses: List<String>): Single<AnalyticsPreview> {
+        return safeService.getAnalyticsPreview(coinUid, addresses.joinToString(","))
+    }
+
     fun analyticsSingle(coinUid: String, currencyCode: String, authToken: String): Single<Analytics> {
         return service.getAnalyticsData(coinUid, currencyCode, authToken)
+    }
+
+    fun safeAnalyticsSingle(coinUid: String, currencyCode: String, authToken: String): Single<Analytics> {
+        return safeService.getAnalyticsData(coinUid, currencyCode, authToken)
     }
 
     fun rankValueSingle(type: String, currencyCode: String): Single<List<RankValue>> {

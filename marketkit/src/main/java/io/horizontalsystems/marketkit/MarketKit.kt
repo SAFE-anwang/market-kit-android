@@ -2,6 +2,7 @@ package io.horizontalsystems.marketkit
 
 import android.content.Context
 import android.os.storage.StorageManager
+import android.util.Log
 import io.horizontalsystems.marketkit.chart.HsChartRequestHelper
 import io.horizontalsystems.marketkit.managers.*
 import io.horizontalsystems.marketkit.models.*
@@ -87,8 +88,14 @@ class MarketKit(
     }
 
     fun marketInfoDetailsSingle(coinUid: String, currencyCode: String): Single<MarketInfoDetails> {
-        return hsProvider.getMarketInfoDetails(coinUid, currencyCode).map {
-            MarketInfoDetails(it)
+        return if (coinUid == "safe-coin") {
+            hsProvider.getSafeMarketInfoDetails("safe-anwang", currencyCode).map {
+                MarketInfoDetails(it)
+            }
+        } else {
+            hsProvider.getMarketInfoDetails(coinUid, currencyCode).map {
+                MarketInfoDetails(it)
+            }
         }
     }
 
@@ -209,14 +216,25 @@ class MarketKit(
         val currentTime = Date().time / 1000
         val fromTimestamp = HsChartRequestHelper.fromTimestamp(currentTime, periodType)
         val interval = HsPointTimePeriod.Day1
-        return hsProvider.coinPriceChartSingle(coinUid, currencyCode, interval, fromTimestamp)
-            .map { response ->
-                response.mapNotNull { chartCoinPrice ->
-                    chartCoinPrice.totalVolume?.let { volume ->
-                        ChartPoint(volume, chartCoinPrice.timestamp, null)
+        return if (coinUid == "safe-coin") {
+            hsProvider.coinSafePriceChartSingle("safe-anwang", currencyCode, interval, fromTimestamp)
+                .map { response ->
+                    response.mapNotNull { chartCoinPrice ->
+                        chartCoinPrice.totalVolume?.let { volume ->
+                            ChartPoint(volume, chartCoinPrice.timestamp, null)
+                        }
                     }
                 }
-            }
+        } else {
+            hsProvider.coinPriceChartSingle(coinUid, currencyCode, interval, fromTimestamp)
+                .map { response ->
+                    response.mapNotNull { chartCoinPrice ->
+                        chartCoinPrice.totalVolume?.let { volume ->
+                            ChartPoint(volume, chartCoinPrice.timestamp, null)
+                        }
+                    }
+                }
+        }
     }
 
     fun dexLiquiditySingle(coinUid: String, currencyCode: String, timePeriod: HsTimePeriod, sessionKey: String?): Single<List<Analytics.VolumePoint>> {
@@ -239,8 +257,16 @@ class MarketKit(
         return hsProvider.analyticsPreviewSingle(coinUid, addresses)
     }
 
+    fun safeAnalyticsPreviewSingle(coinUid: String, addresses: List<String>): Single<AnalyticsPreview> {
+        return hsProvider.safeAnalyticsPreviewSingle(coinUid, addresses)
+    }
+
     fun analyticsSingle(coinUid: String, currencyCode: String, authToken: String): Single<Analytics> {
         return hsProvider.analyticsSingle(coinUid, currencyCode, authToken)
+    }
+
+    fun safeAnalyticsSingle(coinUid: String, currencyCode: String, authToken: String): Single<Analytics> {
+        return hsProvider.safeAnalyticsSingle(coinUid, currencyCode, authToken)
     }
 
     fun cexVolumeRanksSingle(currencyCode: String): Single<List<RankMultiValue>> {
@@ -298,12 +324,21 @@ class MarketKit(
                 interval = HsChartRequestHelper.pointInterval(periodType)
             }
         }
-        return hsProvider.coinPriceChartSingle(coinUid, currencyCode, interval, fromTimestamp)
-            .map { response -> response.map { it.chartPoint } }
+        return if (coinUid == "safe-coin") {
+            return hsProvider.coinSafePriceChartSingle("safe-anwang", currencyCode, interval, fromTimestamp)
+                .map { response -> response.map { it.chartPoint } }
+        } else {
+            return hsProvider.coinPriceChartSingle(coinUid, currencyCode, interval, fromTimestamp)
+                .map { response -> response.map { it.chartPoint } }
+        }
     }
 
     fun chartStartTimeSingle(coinUid: String): Single<Long> {
-        return hsProvider.coinPriceChartStartTime(coinUid)
+        return if (coinUid == "safe-coin") {
+            hsProvider.coinSafePriceChartStartTime("safe-anwang")
+        } else{
+            hsProvider.coinPriceChartStartTime(coinUid)
+        }
     }
 
     // Global Market Info
