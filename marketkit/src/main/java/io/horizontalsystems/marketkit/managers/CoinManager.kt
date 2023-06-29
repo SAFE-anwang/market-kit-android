@@ -248,4 +248,9 @@ class CoinManager(
                 )
             }
 
+
+    fun getTokenEntity(coinUids: List<String>, type: String): List<TokenEntity> =
+        storage.getTokenEntity(coinUids, type)
+
+
 }

@@ -140,4 +140,7 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
         }
     }
 
+    fun getTokenEntity(uids: List<String>, type: String): List<TokenEntity> =
+        coinDao.getTokenEntity(uids, type)
+
 }

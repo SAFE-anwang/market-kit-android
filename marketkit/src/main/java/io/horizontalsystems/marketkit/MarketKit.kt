@@ -380,6 +380,10 @@ class MarketKit(
         return coinSyncer.syncInfo()
     }
 
+
+    fun getTokenEntity(uids: List<String>, type: String): List<TokenEntity> =
+        coinManager.getTokenEntity(uids, type)
+
     companion object {
         fun getInstance(
             context: Context,
