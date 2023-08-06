@@ -238,6 +238,7 @@ data class Analytics(
 }
 
 data class AnalyticsPreview(
+    val subscriptions: List<SubscriptionResponse>?,
     @SerializedName("cex_volume")
     val cexVolume: VolumePreview?,
     @SerializedName("dex_volume")
