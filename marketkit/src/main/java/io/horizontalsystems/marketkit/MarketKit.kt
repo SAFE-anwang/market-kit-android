@@ -28,7 +28,8 @@ class MarketKit(
     private val exchangeSyncer: ExchangeSyncer,
     private val globalMarketInfoManager: GlobalMarketInfoManager,
     private val hsProvider: HsProvider,
-    private val hsDataSyncer: HsDataSyncer
+    private val hsDataSyncer: HsDataSyncer,
+    private val dumpManager: DumpManager,
 ) {
     // Coins
 
@@ -364,6 +365,22 @@ class MarketKit(
     fun chartPointsSingle(
         coinUid: String,
         currencyCode: String,
+        interval: HsPointTimePeriod,
+        pointCount: Int
+    ): Single<List<ChartPoint>> {
+        val fromTimestamp = Date().time / 1000 - interval.interval * pointCount
+
+        return hsProvider.coinPriceChartSingle(coinUid, currencyCode, interval, fromTimestamp)
+            .map { response ->
+                response.map { chartCoinPrice ->
+                    chartCoinPrice.chartPoint
+                }
+            }
+    }
+
+    fun chartPointsSingle(
+        coinUid: String,
+        currencyCode: String,
         periodType: HsPeriodType
     ): Single<Pair<Long, List<ChartPoint>>> {
         val interval = HsChartRequestHelper.pointInterval(periodType)
@@ -450,6 +467,10 @@ class MarketKit(
         return coinSyncer.syncInfo()
     }
 
+    fun getInitialDump(): String {
+        return dumpManager.getInitialDump()
+    }
+
 
     fun getTokenEntity(uids: List<String>, type: String): List<TokenEntity> =
         coinManager.getTokenEntity(uids, type)
@@ -472,6 +493,7 @@ class MarketKit(
             }
 
             val marketDatabase = MarketDatabase.getInstance(context)
+            val dumpManager = DumpManager(marketDatabase)
             val hsProvider = HsProvider(hsApiBaseUrl, hsApiKey)
             val hsNftProvider = HsNftProvider(hsApiBaseUrl, hsApiKey)
             val coinGeckoProvider = CoinGeckoProvider("https://api.coingecko.com/api/v3/")
@@ -509,7 +531,8 @@ class MarketKit(
                 exchangeSyncer,
                 globalMarketInfoManager,
                 hsProvider,
-                hsDataSyncer
+                hsDataSyncer,
+                dumpManager
             )
         }
     }
