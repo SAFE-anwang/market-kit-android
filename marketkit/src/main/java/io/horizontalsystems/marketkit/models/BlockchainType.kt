@@ -17,6 +17,9 @@ sealed class BlockchainType : Parcelable {
     object Litecoin : BlockchainType()
 
     @Parcelize
+    object Dogecoin : BlockchainType()
+
+    @Parcelize
     object Dash : BlockchainType()
 
     @Parcelize
@@ -67,6 +70,7 @@ sealed class BlockchainType : Parcelable {
             is BitcoinCash -> "bitcoin-cash"
             is ECash -> "ecash"
             is Litecoin -> "litecoin"
+            is Dogecoin -> "dogecoin"
             is Dash -> "dash"
             is Safe -> "safe-coin"
             is Zcash -> "zcash"
@@ -97,6 +101,7 @@ sealed class BlockchainType : Parcelable {
         BitcoinCash -> "bitcoinCash"
         ECash -> "ecash"
         Litecoin -> "litecoin"
+        Dogecoin -> "dogecoin"
         Dash -> "dash"
         Safe -> "safe-coin"
         Zcash -> "zcash"
@@ -122,6 +127,7 @@ sealed class BlockchainType : Parcelable {
                 "bitcoin-cash" -> BitcoinCash
                 "ecash" -> ECash
                 "litecoin" -> Litecoin
+                "dogecoin" -> Dogecoin
                 "dash" -> Dash
                 "safe-coin" -> Safe
                 "zcash" -> Zcash
