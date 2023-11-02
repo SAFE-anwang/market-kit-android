@@ -1,6 +1,5 @@
 package io.horizontalsystems.marketkit.providers
 
-import android.util.Log
 import io.horizontalsystems.marketkit.managers.CoinPriceManager
 import io.horizontalsystems.marketkit.managers.ICoinPriceCoinUidDataSource
 import io.horizontalsystems.marketkit.models.CoinPrice
@@ -27,15 +26,16 @@ class CoinPriceSchedulerProvider(
     override val id = "CoinPriceProvider"
 
     override val lastSyncTimestamp: Long?
-        get() = manager.lastSyncTimeStamp(coinUids, currencyCode)
+        get() = manager.lastSyncTimeStamp(allCoinUids, currencyCode)
 
     override val expirationInterval: Long
         get() = CoinPrice.expirationInterval
 
     override val syncSingle: Single<Unit>
         get() {
+            val (coinUids, walletUids) = combinedCoinUids
             return if (coinUids.contains("safe-coin") && coinUids.size == 1) {
-                provider.getSafeCoinPrices(listOf("safe-anwang"), currencyCode)
+                provider.getSafeCoinPrices(listOf("safe-anwang"), walletUids, currencyCode)
                     .doOnSuccess {
                         it.forEach { item ->
                             val safeCoinPriceList = mutableListOf<CoinPrice>()
@@ -46,12 +46,12 @@ class CoinPriceSchedulerProvider(
                     }.map {}
             } else {
                 val safePrice = try {
-                    provider.getSafeCoinPrices(listOf("safe-anwang"), currencyCode).blockingGet()
+                    provider.getSafeCoinPrices(listOf("safe-anwang"), walletUids, currencyCode).blockingGet()
                 } catch (e: Exception) {
                     null
                 }
 
-                provider.getCoinPrices(coinUids, currencyCode)
+                provider.getCoinPrices(coinUids, walletUids, currencyCode)
                     .doOnSuccess {
                         val priceList = mutableListOf<CoinPrice>()
                         safePrice?.forEach {
@@ -77,11 +77,14 @@ class CoinPriceSchedulerProvider(
                 }
             }.map {}
 
-    private val coinUids: List<String>
-        get() = dataSource?.coinUids(currencyCode) ?: listOf()
+    private val allCoinUids: List<String>
+        get() = dataSource?.allCoinUids(currencyCode) ?: listOf()
+
+    private val combinedCoinUids: Pair<List<String>, List<String>>
+        get() = dataSource?.combinedCoinUids(currencyCode) ?: Pair(listOf(), listOf())
 
     override fun notifyExpired() {
-        manager.notifyExpired(coinUids, currencyCode)
+        manager.notifyExpired(allCoinUids, currencyCode)
     }
 
     private fun handle(updatedCoinPrices: List<CoinPrice>) {

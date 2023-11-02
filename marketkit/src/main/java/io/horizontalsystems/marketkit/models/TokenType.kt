@@ -20,11 +20,11 @@ sealed class TokenType : Parcelable {
     @Parcelize
     object Native : TokenType()
 
-    /*@Parcelize
+    @Parcelize
     data class Derived(val derivation: Derivation) : TokenType()
 
     @Parcelize
-    data class AddressTyped(val type: AddressType) : TokenType()*/
+    data class AddressTyped(val type: AddressType) : TokenType()
 
     @Parcelize
     data class Eip20(val address: String) : TokenType()
@@ -45,8 +45,8 @@ sealed class TokenType : Parcelable {
                 is Eip20 -> listOf("eip20", address)
                 is Bep2 -> listOf("bep2", symbol)
                 is Spl -> listOf("spl", address)
-//                is AddressTyped -> listOf("address_type", type.name)
-//                is Derived -> listOf("derived", derivation.name)
+                is AddressTyped -> listOf("address_type", type.name)
+                is Derived -> listOf("derived", derivation.name)
                 is Unsupported -> if (reference.isNotBlank()) {
                     listOf("unsupported", type, reference)
                 } else {
@@ -62,8 +62,8 @@ sealed class TokenType : Parcelable {
             is Eip20 -> Value("eip20", address)
             is Bep2 -> Value("bep2", symbol)
             is Spl -> Value("spl", address)
-//            is AddressTyped -> Value("address_type", type.name)
-//            is Derived -> Value("derived", derivation.name)
+            is AddressTyped -> Value("address_type", type.name)
+            is Derived -> Value("derived", derivation.name)
             is Unsupported -> Value(type, reference)
         }
 
@@ -99,7 +99,7 @@ sealed class TokenType : Parcelable {
                 /*"address_type" -> {
                     if (reference.isNotBlank()) {
                         try {
-                            return AddressTyped(AddressType.valueOf(reference))
+                            return AddressTyped(AddressType.valueOf(reference.lowercase().replaceFirstChar(Char::uppercase)))
                         } catch (e: IllegalArgumentException) {
                         }
                     }
@@ -108,7 +108,7 @@ sealed class TokenType : Parcelable {
                 "derived" -> {
                     if (reference.isNotBlank()) {
                         try {
-                            return Derived(Derivation.valueOf(reference))
+                            return Derived(Derivation.valueOf(reference.lowercase().replaceFirstChar(Char::uppercase)))
                         } catch (e: IllegalArgumentException) {
                         }
                     }
