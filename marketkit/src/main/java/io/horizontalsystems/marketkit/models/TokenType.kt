@@ -96,7 +96,7 @@ sealed class TokenType : Parcelable {
                     }
                 }
 
-                /*"address_type" -> {
+                "address_type" -> {
                     if (reference.isNotBlank()) {
                         try {
                             return AddressTyped(AddressType.valueOf(reference.lowercase().replaceFirstChar(Char::uppercase)))
@@ -112,7 +112,7 @@ sealed class TokenType : Parcelable {
                         } catch (e: IllegalArgumentException) {
                         }
                     }
-                }*/
+                }
             }
 
             return Unsupported(type, reference)
