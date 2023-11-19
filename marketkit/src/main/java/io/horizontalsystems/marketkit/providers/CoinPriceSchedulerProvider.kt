@@ -1,5 +1,6 @@
 package io.horizontalsystems.marketkit.providers
 
+import android.util.Log
 import io.horizontalsystems.marketkit.managers.CoinPriceManager
 import io.horizontalsystems.marketkit.managers.ICoinPriceCoinUidDataSource
 import io.horizontalsystems.marketkit.models.CoinPrice
@@ -21,6 +22,8 @@ class CoinPriceSchedulerProvider(
     private val manager: CoinPriceManager,
     private val provider: HsProvider
 ) : ISchedulerProvider {
+
+    private var isInit = true
 
     companion object {
         var isFirstLoad = true
@@ -50,8 +53,13 @@ class CoinPriceSchedulerProvider(
                         }
                     }.map {}
             } else {
-                val safePrice = if (isFirstLoad) {
-                    isFirstLoad = false
+                val safePrice = if (isInit || isFirstLoad) {
+                    if (!isInit) {
+                        isFirstLoad = false
+                    }
+                    if (isInit) {
+                        isInit = false
+                    }
                     Single.just(listOf<CoinPrice>()).blockingGet()
                 } else {
                     try {
