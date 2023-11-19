@@ -51,6 +51,7 @@ class CoinPriceSchedulerProvider(
                     }.map {}
             } else {
                 val safePrice = if (isFirstLoad) {
+                    isFirstLoad = false
                     Single.just(listOf<CoinPrice>()).blockingGet()
                 } else {
                     try {
