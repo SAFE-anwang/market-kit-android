@@ -1226,7 +1226,7 @@ INSERT INTO BlockchainEntity VALUES('safe-coin','SAFE',null);
 INSERT INTO TokenEntity VALUES('safe-coin','safe-coin','native',8,'');
 INSERT INTO TokenEntity VALUES('safe-coin','ethereum','eip20',18,'0xee9c1ea4dcf0aaf4ff2d78b6ff83aa69797b65eb');
 INSERT INTO TokenEntity VALUES('safe-coin','binance-smart-chain','eip20',18,'0x4d7fa587ec8e50bd0e9cd837cb4da796f47218a1');
-INSERT INTO TokenEntity VALUES('safe-coin','polygon-pos','eip20',18,'0xb7Dd19490951339fE65E341Df6eC5f7f93FF2779');
+INSERT INTO TokenEntity VALUES('safe-coin','polygon-pos','eip20',18,'0xb7dd19490951339fe65e341df6ec5f7f93ff2779');
 INSERT INTO TokenEntity VALUES('aave','harmony-shard-0','harmony-shard-0',null,'0xcf323aad9e522b93f11c352caa519ad0e14eb40f');
 INSERT INTO TokenEntity VALUES('aave','fantom','eip20',18,'0x6a07a792ab2965c72a5b8088d3a069a7ac3a993b');
 INSERT INTO TokenEntity VALUES('aave','binance-smart-chain','eip20',18,'0xfb6115445bff7b52feb98650c87f44907e58f802');

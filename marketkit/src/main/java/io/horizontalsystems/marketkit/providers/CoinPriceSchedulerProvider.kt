@@ -21,6 +21,11 @@ class CoinPriceSchedulerProvider(
     private val manager: CoinPriceManager,
     private val provider: HsProvider
 ) : ISchedulerProvider {
+
+    companion object {
+        var isFirstLoad = true
+    }
+
     var dataSource: ICoinPriceCoinUidDataSource? = null
 
     override val id = "CoinPriceProvider"
@@ -45,10 +50,14 @@ class CoinPriceSchedulerProvider(
                         }
                     }.map {}
             } else {
-                val safePrice = try {
-                    provider.getSafeCoinPrices(listOf("safe-anwang"), walletUids, currencyCode).blockingGet()
-                } catch (e: Exception) {
-                    null
+                val safePrice = if (isFirstLoad) {
+                    Single.just(listOf<CoinPrice>()).blockingGet()
+                } else {
+                    try {
+                        provider.getSafeCoinPrices(listOf("safe-anwang"), walletUids, currencyCode).blockingGet()
+                    } catch (e: Exception) {
+                        Single.just(listOf<CoinPrice>()).blockingGet()
+                    }
                 }
 
                 provider.getCoinPrices(coinUids, walletUids, currencyCode)
