@@ -1,10 +1,10 @@
 package io.horizontalsystems.marketkit.providers
 
-import android.util.Log
 import io.horizontalsystems.marketkit.managers.CoinPriceManager
 import io.horizontalsystems.marketkit.managers.ICoinPriceCoinUidDataSource
 import io.horizontalsystems.marketkit.models.CoinPrice
 import io.reactivex.Single
+import java.math.BigDecimal
 import java.util.stream.Collectors
 
 interface ISchedulerProvider {
@@ -60,7 +60,12 @@ class CoinPriceSchedulerProvider(
                     if (isInit) {
                         isInit = false
                     }
-                    Single.just(listOf<CoinPrice>()).blockingGet()
+                    Single.just(listOf<CoinPrice>(
+                            CoinPrice("safe-anwang", "USD",
+                                    BigDecimal("3.28741459"),
+                                    BigDecimal("-6.42345300"),
+                                    (System.currentTimeMillis() - 24*60*60*1000) / 1000)
+                    )).blockingGet()
                 } else {
                     try {
                         provider.getSafeCoinPrices(listOf("safe-anwang"), walletUids, currencyCode).blockingGet()
