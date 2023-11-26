@@ -936,7 +936,6 @@ INSERT INTO BlockchainEntity VALUES('beam','BEAM',null);
 INSERT INTO BlockchainEntity VALUES('pandacoin','Pandacoin',null);
 INSERT INTO BlockchainEntity VALUES('skycoin','Skycoin',null);
 INSERT INTO BlockchainEntity VALUES('cowry','COWRY',null);
-INSERT INTO BlockchainEntity VALUES('safe-coin','Safe',null);
 INSERT INTO BlockchainEntity VALUES('altcommunity-coin','ALTOM',null);
 INSERT INTO BlockchainEntity VALUES('bitgert','bitgert',null);
 INSERT INTO BlockchainEntity VALUES('influxcoin','Influxcoin',null);
