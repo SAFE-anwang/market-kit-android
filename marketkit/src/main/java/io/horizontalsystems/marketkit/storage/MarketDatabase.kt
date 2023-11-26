@@ -24,7 +24,7 @@ import java.util.logging.Logger
         Exchange::class,
         SyncerState::class,
     ],
-    version = 12,
+    version = 11,
     exportSchema = false
 )
 @TypeConverters(DatabaseTypeConverters::class)
@@ -84,14 +84,20 @@ abstract class MarketDatabase : RoomDatabase() {
             val bufferedReader = BufferedReader(InputStreamReader(inputStream))
             var insertCount = 0
 
+            var insertStmt: String = ""
             try {
                 while (bufferedReader.ready()) {
-                    val insertStmt: String = bufferedReader.readLine()
+                    insertStmt = bufferedReader.readLine()
+                    logger.warning("longwen $insertStmt")
+//                    WriteFile.writeToFile(context, "$insertStmt")
                     db.execSQL(insertStmt)
                     insertCount++
                 }
+                logger.warning("longwen loadInitialCoins=$insertCount")
+                WriteFile.writeToFile(context, "loadInitialCoins=$insertCount")
             } catch (error: Exception) {
-                logger.warning("Error in loadInitialCoins(): ${error.message ?: error.javaClass.simpleName}")
+                WriteFile.writeToFile(context, "loadInitialCoins error=$error, insertStmt=$insertStmt")
+                logger.warning("longwen Error in loadInitialCoins(): ${error.message ?: error.javaClass.simpleName}")
             }
 
             return insertCount
