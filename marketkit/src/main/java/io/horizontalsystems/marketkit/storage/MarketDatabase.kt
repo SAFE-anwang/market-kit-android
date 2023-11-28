@@ -44,8 +44,10 @@ abstract class MarketDatabase : RoomDatabase() {
 
         @Volatile
         private var INSTANCE: MarketDatabase? = null
+        var application: Context? = null
 
         fun getInstance(context: Context): MarketDatabase {
+            application = context.applicationContext
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: buildDatabase(context).also { INSTANCE = it }
             }

@@ -1,11 +1,13 @@
 package io.horizontalsystems.marketkit.providers
 
+import android.content.Context
+import android.util.Log
 import io.horizontalsystems.marketkit.managers.CoinPriceManager
 import io.horizontalsystems.marketkit.managers.ICoinPriceCoinUidDataSource
 import io.horizontalsystems.marketkit.models.CoinPrice
+import io.horizontalsystems.marketkit.storage.MarketDatabase
 import io.reactivex.Single
 import java.math.BigDecimal
-import java.util.stream.Collectors
 
 interface ISchedulerProvider {
     val id: String
@@ -50,6 +52,7 @@ class CoinPriceSchedulerProvider(
                             // 新增本地safe-erc20、safe-bep20市场价格
                             safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff, item.timestamp/1000))
                             manager.handleUpdated(safeCoinPriceList, currencyCode)
+                            saveSafePrice(item.value.toString(), item.diff.toString(), item.timestamp)
                         }
                     }.map {}
             } else {
@@ -60,15 +63,14 @@ class CoinPriceSchedulerProvider(
                     if (isInit) {
                         isInit = false
                     }
-                    Single.just(listOf<CoinPrice>(
-                            CoinPrice("safe-anwang", "USD",
-                                    BigDecimal("3.28741459"),
-                                    BigDecimal("-6.42345300"),
-                                    (System.currentTimeMillis() - 24*60*60*1000) / 1000)
-                    )).blockingGet()
+                    Single.just(listOf<CoinPrice>(getSafeCoinPrice())).blockingGet()
                 } else {
                     try {
-                        provider.getSafeCoinPrices(listOf("safe-anwang"), walletUids, currencyCode).blockingGet()
+                        val price = provider.getSafeCoinPrices(listOf("safe-anwang"), walletUids, currencyCode).blockingGet()
+                        if (price != null && price.isNotEmpty()) {
+                            saveSafePrice(price[0].value.toString(), price[0].diff.toString(), price[0].timestamp)
+                        }
+                        price
                     } catch (e: Exception) {
                         Single.just(listOf<CoinPrice>()).blockingGet()
                     }
@@ -113,5 +115,33 @@ class CoinPriceSchedulerProvider(
     private fun handle(updatedCoinPrices: List<CoinPrice>) {
         manager.handleUpdated(updatedCoinPrices, currencyCode)
     }
+
+    private fun getSafeCoinPrice(): CoinPrice {
+        return manager.coinPrice("safe-coin", "USD")
+                ?: getDefaultSafePrice()
+    }
+
+    private fun saveSafePrice(price: String, diff: String, time: Long) {
+        Log.e("longwen", "save safe price price=$price")
+        val sp = MarketDatabase.application?.getSharedPreferences("safe_price.xml", Context.MODE_PRIVATE) ?: return
+        val editor = sp.edit()
+        editor.putString("price", price)
+        editor.putString("diff", diff)
+        editor.putLong("time", time)
+        editor.commit()
+    }
+
+    private fun getDefaultSafePrice(): CoinPrice {
+        val sp = MarketDatabase.application?.getSharedPreferences("safe_price.xml", Context.MODE_PRIVATE)
+        val price = sp?.getString("price", "3.28741459") ?: "3.28741459"
+        val diff = sp?.getString("diff", "-6.42345300") ?: "-6.42345300"
+        val time = sp?.getLong("time", (System.currentTimeMillis() - 24 * 60 * 60 * 1000) / 1000)
+                ?: ((System.currentTimeMillis() - 24 * 60 * 60 * 1000) / 1000)
+        return CoinPrice("safe-coin", "USD",
+                BigDecimal(price),
+                BigDecimal(diff),
+                time)
+    }
+
 
 }
