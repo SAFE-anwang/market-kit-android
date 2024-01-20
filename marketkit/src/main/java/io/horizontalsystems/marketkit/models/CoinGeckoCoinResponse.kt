@@ -1,3 +1,4 @@
+
 package io.horizontalsystems.marketkit.models
 
 import android.util.Log
@@ -26,7 +27,7 @@ data class CoinGeckoCoinResponse(
 
     val exchangeIds: List<String>
         get() = tickers.map { it.market.id }
-
+/*
     fun marketTickers(imageUrls: Map<String, String>, coins: List<Coin>): List<MarketTicker> {
         val contractAddresses = platforms.mapNotNull { (platformName, contractAddress) ->
             if (smartContractPlatforms.contains(platformName)) {
@@ -106,7 +107,7 @@ data class CoinGeckoCoinResponse(
                     it.tradeUrl
                 )
         }
-    }
+    }*/
 
     companion object {
         private val smartContractPlatforms: List<String> =
@@ -134,7 +135,6 @@ data class TickerMarketRaw(
     val id: String,
     val name: String,
 )
-
 data class GeckoCoinPriceResponse(
     val id: String,
     val current_price: BigDecimal?,

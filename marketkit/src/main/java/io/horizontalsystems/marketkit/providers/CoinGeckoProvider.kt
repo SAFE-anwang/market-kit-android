@@ -2,6 +2,7 @@ package io.horizontalsystems.marketkit.providers
 
 import io.horizontalsystems.marketkit.models.*
 import io.reactivex.Single
+import okhttp3.internal.connection.Exchange
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -15,13 +16,6 @@ class CoinGeckoProvider(private val baseUrl: String) {
 
     private val safeService: CoinGeckoService by lazy {
         RetrofitUtils.buildUnsafe("https://safewallet.anwang.com/v1/").create(CoinGeckoService::class.java)
-    }
-
-    fun exchangesSingle(limit: Int, page: Int): Single<List<Exchange>> {
-        return coinGeckoService.exchanges(limit, page)
-            .map { list ->
-                list.map { Exchange(it.id, it.name, it.image) }
-            }
     }
 
     fun marketTickersSingle(coinGeckoId: String): Single<CoinGeckoCoinResponse> {
@@ -56,12 +50,6 @@ class CoinGeckoProvider(private val baseUrl: String) {
 
 
     interface CoinGeckoService {
-
-        @GET("exchanges")
-        fun exchanges(
-            @Query("per_page") limit: Int,
-            @Query("page") days: Int,
-        ): Single<List<ExchangeRaw>>
 
         @GET("coins/{coinId}")
         fun marketTickers(

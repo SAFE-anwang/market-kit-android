@@ -21,7 +21,6 @@ import java.util.logging.Logger
         CoinPrice::class,
         CoinHistoricalPrice::class,
         GlobalMarketInfo::class,
-        Exchange::class,
         SyncerState::class,
     ],
     version = 11,
@@ -33,7 +32,6 @@ abstract class MarketDatabase : RoomDatabase() {
     abstract fun coinPriceDao(): CoinPriceDao
     abstract fun coinHistoricalPriceDao(): CoinHistoricalPriceDao
     abstract fun globalMarketInfoDao(): GlobalMarketInfoDao
-    abstract fun exchangeDao(): ExchangeDao
     abstract fun syncerStateDao(): SyncerStateDao
     abstract fun blockchainEntityDao(): BlockchainEntityDao
     abstract fun tokenEntityDao(): TokenEntityDao
@@ -44,8 +42,10 @@ abstract class MarketDatabase : RoomDatabase() {
 
         @Volatile
         private var INSTANCE: MarketDatabase? = null
+        var application: Context? = null
 
         fun getInstance(context: Context): MarketDatabase {
+            application = context.applicationContext
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: buildDatabase(context).also { INSTANCE = it }
             }
