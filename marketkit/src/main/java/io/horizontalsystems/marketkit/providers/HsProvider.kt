@@ -77,6 +77,18 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
         )
     }
 
+    fun marketSafeInfosSingle(
+        coinUids: List<String>,
+        currencyCode: String,
+        apiTag: String,
+    ): Single<List<MarketInfoRaw>> {
+        return safeService.getMarketInfos(
+            apiTag = apiTag,
+            uids = coinUids.joinToString(","),
+            currencyCode = currencyCode
+        )
+    }
+
     fun marketInfosSingle(
         categoryUid: String,
         currencyCode: String,
