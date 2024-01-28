@@ -316,7 +316,11 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
     }
 
     fun marketTickers(coinUid: String): Single<List<MarketTicker>> {
-        return service.getMarketTickers(coinUid)
+        return if (coinUid == "safe-coin") {
+            safeService.getMarketTickers("safe-anwang")
+        } else {
+            service.getMarketTickers(coinUid)
+        }
     }
 
     fun topMoversRawSingle(currencyCode: String): Single<TopMoversRaw> {

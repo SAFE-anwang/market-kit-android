@@ -164,15 +164,28 @@ class MarketKit(
         language: String,
         apiTag: String,
     ): Single<MarketInfoOverview> {
-        return hsProvider.getMarketInfoOverview(
-            coinUid = coinUid,
-            currencyCode = currencyCode,
-            language = language,
-            apiTag = apiTag,
-        ).map { rawOverview ->
-            val fullCoin = coinManager.fullCoin(coinUid) ?: throw Exception("No Full Coin")
+        return if (coinUid == "safe-coin") {
+            hsProvider.getSafeMarketInfoOverview(
+                    coinUid = "safe-anwang",
+                    currencyCode = currencyCode,
+                    language = language,
+                    apiTag = apiTag,
+            ).map { rawOverview ->
+                val fullCoin = coinManager.fullCoin(coinUid) ?: throw Exception("No Full Coin")
 
-            rawOverview.marketInfoOverview(fullCoin)
+                rawOverview.marketInfoOverview(fullCoin)
+            }
+        } else {
+            hsProvider.getMarketInfoOverview(
+                    coinUid = coinUid,
+                    currencyCode = currencyCode,
+                    language = language,
+                    apiTag = apiTag,
+            ).map { rawOverview ->
+                val fullCoin = coinManager.fullCoin(coinUid) ?: throw Exception("No Full Coin")
+
+                rawOverview.marketInfoOverview(fullCoin)
+            }
         }
     }
 
