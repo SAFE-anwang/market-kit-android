@@ -1,7 +1,6 @@
 package io.horizontalsystems.marketkit.providers
 
 import android.content.Context
-import android.util.Log
 import io.horizontalsystems.marketkit.managers.CoinPriceManager
 import io.horizontalsystems.marketkit.managers.ICoinPriceCoinUidDataSource
 import io.horizontalsystems.marketkit.models.CoinPrice
@@ -122,7 +121,6 @@ class CoinPriceSchedulerProvider(
     }
 
     private fun saveSafePrice(price: String, diff: String, time: Long) {
-        Log.e("longwen", "save safe price price=$price")
         val sp = MarketDatabase.application?.getSharedPreferences("safe_price.xml", Context.MODE_PRIVATE) ?: return
         val editor = sp.edit()
         editor.putString("price", price)
