@@ -37,24 +37,6 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
     val exportDumpUri: LiveData<Uri>
         get() = _exportDumpUri
 
-    fun runAudits() {
-        val uniswapAddresses = listOf(
-            "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
-            "0xbf5140a22578168fd562dccf235e5d43a02ce9b1"
-        )
-        marketKit.auditReportsSingle(uniswapAddresses)
-            .subscribeOn(Schedulers.io())
-            .subscribe({ auditors ->
-                auditors.forEach { auditor ->
-                    Log.e("AAA", auditor.name)
-                }
-            }, {
-                Log.e("AAA", "error", it)
-            }).let {
-                disposables.add(it)
-            }
-    }
-
     fun runInvestments() {
         val coinUid = "ethereum"
 
@@ -169,7 +151,7 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
 
     fun runFetchMarketInfosByTop() {
         val top = 250
-        marketKit.advancedMarketInfosSingle(top, "USD", "demo-app-tag")
+        marketKit.advancedMarketInfosSingle(top, "USD")
             .subscribeOn(Schedulers.io())
             .subscribe({
                 it.forEach {
@@ -541,13 +523,14 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
     }
 
     fun runAnalytics() {
-        val coinUid = "ethereum"
+        val coinUid = "uniswap"
         val currencyCode = "usd"
         marketKit.analyticsSingle(authToken, coinUid, currencyCode, "demo-app-tag")
             .subscribeOn(Schedulers.io())
             .subscribe({ data ->
                 Log.e("AAA", "cexVolume rank30d: ${data.cexVolume?.rank30d} points.size: ${data.cexVolume?.points?.size} transactions volume30d: ${data.transactions?.volume30d} points.size: ${data.transactions?.points?.size} ")
                 Log.e("AAA", "fundsInvested: ${data.fundsInvested} holders.size: ${data.holders?.size} ")
+                Log.e("AAA", "issues: ${data.issues} ")
             }, {
                 Log.e("AAA", "runAnalyticsPreview error", it)
             }).let {

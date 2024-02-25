@@ -14,7 +14,6 @@ import io.horizontalsystems.marketkit.managers.NftManager
 import io.horizontalsystems.marketkit.managers.PostManager
 import io.horizontalsystems.marketkit.models.Analytics
 import io.horizontalsystems.marketkit.models.AnalyticsPreview
-import io.horizontalsystems.marketkit.models.Auditor
 import io.horizontalsystems.marketkit.models.Blockchain
 import io.horizontalsystems.marketkit.models.BlockchainType
 import io.horizontalsystems.marketkit.models.ChartPoint
@@ -50,7 +49,6 @@ import io.horizontalsystems.marketkit.models.TopPlatform
 import io.horizontalsystems.marketkit.models.TopPlatformMarketCapPoint
 import io.horizontalsystems.marketkit.providers.CoinPriceSchedulerFactory
 import io.horizontalsystems.marketkit.providers.CryptoCompareProvider
-import io.horizontalsystems.marketkit.providers.DefiYieldProvider
 import io.horizontalsystems.marketkit.providers.HsNftProvider
 import io.horizontalsystems.marketkit.providers.HsProvider
 import io.horizontalsystems.marketkit.storage.CoinHistoricalPriceStorage
@@ -79,7 +77,6 @@ class MarketKit(
     private val hsProvider: HsProvider,
     private val hsDataSyncer: HsDataSyncer,
     private val dumpManager: DumpManager,
-    private val defiYieldProvider: DefiYieldProvider,
 ) {
     // Coins
 
@@ -131,9 +128,8 @@ class MarketKit(
     fun advancedMarketInfosSingle(
         top: Int = 250,
         currencyCode: String,
-        apiTag: String
     ): Single<List<MarketInfo>> {
-        return hsProvider.advancedMarketInfosSingle(top, currencyCode, apiTag).map {
+        return hsProvider.advancedMarketInfosSingle(top, currencyCode).map {
             coinManager.getMarketInfos(it)
         }
     }
@@ -307,10 +303,6 @@ class MarketKit(
 
     fun coinReportsSingle(coinUid: String): Single<List<CoinReport>> {
         return hsProvider.coinReportsSingle(coinUid)
-    }
-
-    fun auditReportsSingle(addresses: List<String>): Single<List<Auditor>> {
-        return defiYieldProvider.auditReportsSingle(addresses)
     }
 
     // Pro Data
@@ -625,7 +617,6 @@ class MarketKit(
             hsApiBaseUrl: String,
             hsApiKey: String,
             cryptoCompareApiKey: String? = null,
-            defiYieldApiKey: String? = null,
             appVersion: String,
             appId: String? = null,
         ): MarketKit {
@@ -643,7 +634,6 @@ class MarketKit(
             val dumpManager = DumpManager(marketDatabase)
             val hsProvider = HsProvider(hsApiBaseUrl, hsApiKey, appVersion, appId)
             val hsNftProvider = HsNftProvider(hsApiBaseUrl, hsApiKey)
-            val defiYieldProvider = DefiYieldProvider(defiYieldApiKey)
             val coinStorage = CoinStorage(marketDatabase)
             val coinManager = CoinManager(coinStorage)
             val nftManager = NftManager(coinManager, hsNftProvider)
@@ -676,7 +666,6 @@ class MarketKit(
                 hsProvider,
                 hsDataSyncer,
                 dumpManager,
-                defiYieldProvider,
             )
         }
     }
