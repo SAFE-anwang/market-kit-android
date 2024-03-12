@@ -475,6 +475,7 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
             additionalParams["enabled_uids"] = walletCoinUids.joinToString(separator = ",")
         }
         return safeService.getCoinPrices(
+                apiTag = "coin_prices",
                 uids = coinUids.joinToString(separator = ","),
                 currencyCode = currencyCode,
                 additionalParams = additionalParams
