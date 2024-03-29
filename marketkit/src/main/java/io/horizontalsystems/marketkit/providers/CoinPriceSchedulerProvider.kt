@@ -1,7 +1,6 @@
 package io.horizontalsystems.marketkit.providers
 
 import android.content.Context
-import android.util.Log
 import io.horizontalsystems.marketkit.managers.CoinPriceManager
 import io.horizontalsystems.marketkit.managers.ICoinPriceCoinUidDataSource
 import io.horizontalsystems.marketkit.models.CoinPrice

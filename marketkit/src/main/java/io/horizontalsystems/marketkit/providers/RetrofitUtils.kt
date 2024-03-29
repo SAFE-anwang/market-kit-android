@@ -31,11 +31,15 @@ object RetrofitUtils {
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BASIC)
 
         val headersInterceptor = Interceptor { chain ->
+            val request = chain.request()
+            var response = chain.proceed(request)
             val requestBuilder = chain.request().newBuilder()
             headers.forEach { (name, value) ->
                 requestBuilder.header(name, value)
             }
-            chain.proceed(requestBuilder.build())
+            response.close()
+            response = chain.proceed(requestBuilder.build())
+            return@Interceptor response
         }
 
         return OkHttpClient.Builder()
