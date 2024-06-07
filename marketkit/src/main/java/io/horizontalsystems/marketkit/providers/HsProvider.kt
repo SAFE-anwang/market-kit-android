@@ -1,6 +1,7 @@
 package io.horizontalsystems.marketkit.providers
 
 import com.google.gson.annotations.SerializedName
+import io.horizontalsystems.marketkit.SafeExtend.isSafeCoin
 import io.horizontalsystems.marketkit.models.*
 import io.reactivex.Single
 import retrofit2.Response
@@ -316,7 +317,7 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
     }
 
     fun marketTickers(coinUid: String): Single<List<MarketTicker>> {
-        return if (coinUid == "safe-coin") {
+        return if (coinUid.isSafeCoin()) {
             safeService.getMarketTickers("safe-anwang")
         } else {
             service.getMarketTickers(coinUid)

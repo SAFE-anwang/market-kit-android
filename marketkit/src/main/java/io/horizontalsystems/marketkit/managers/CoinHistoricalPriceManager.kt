@@ -1,6 +1,7 @@
 package io.horizontalsystems.marketkit.managers
 
 import io.horizontalsystems.marketkit.ProviderError
+import io.horizontalsystems.marketkit.SafeExtend.isSafeCoin
 import io.horizontalsystems.marketkit.models.CoinHistoricalPrice
 import io.horizontalsystems.marketkit.providers.HsProvider
 import io.horizontalsystems.marketkit.storage.CoinHistoricalPriceStorage
@@ -28,7 +29,7 @@ class CoinHistoricalPriceManager(
         calendar.set(2022, 6, 28)
         val timestampTmp = calendar.timeInMillis
         // 从 2022-7-28开始，safe的价格从coin gecko获取
-        if (coinUid == "safe-coin" && timestamp * 1000 >= timestampTmp) {
+        if (coinUid.isSafeCoin() && timestamp * 1000 >= timestampTmp) {
             val date = SimpleDateFormat("dd-MM-yyyy").format(Date(timestamp * 1000))
             val coinId = "safe-anwang"
 

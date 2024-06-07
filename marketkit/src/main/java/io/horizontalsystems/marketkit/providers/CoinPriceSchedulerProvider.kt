@@ -43,13 +43,14 @@ class CoinPriceSchedulerProvider(
     override val syncSingle: Single<Unit>
         get() {
             val (coinUids, walletUids) = combinedCoinUids
-            return if (coinUids.contains("safe-coin") && coinUids.size == 1) {
+            return if ((coinUids.contains("safe-coin") || coinUids.contains("safe4-coin")) && coinUids.size == 1) {
                 provider.getSafeCoinPrices(listOf("safe-anwang"), walletUids, currencyCode)
                     .doOnSuccess {
                         it.forEach { item ->
                             val safeCoinPriceList = mutableListOf<CoinPrice>()
                             // 新增本地safe-erc20、safe-bep20市场价格
                             safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                            safeCoinPriceList.add(CoinPrice("safe4-coin", item.currencyCode, item.value, item.diff, item.timestamp/1000))
                             manager.handleUpdated(safeCoinPriceList, currencyCode)
                             saveSafePrice(item.value.toString(), item.diff.toString(), item.timestamp)
                         }
@@ -80,6 +81,7 @@ class CoinPriceSchedulerProvider(
                         val priceList = mutableListOf<CoinPrice>()
                         safePrice?.forEach {
                             priceList.add(it.copy(coinUid = "safe-coin"))
+                            priceList.add(it.copy(coinUid = "safe4-coin"))
                         }
                         priceList.addAll(it)
                         handle(priceList)
@@ -94,6 +96,7 @@ class CoinPriceSchedulerProvider(
                         val safeCoinPriceList = mutableListOf<CoinPrice>()
                         // 新增本地safe-erc20、safe-bep20市场价格
                         safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                        safeCoinPriceList.add(CoinPrice("safe4-coin", item.currencyCode, item.value, item.diff, item.timestamp/1000))
                         safeCoinPriceList.add(CoinPrice("custom_safe-erc20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp/1000))
                         safeCoinPriceList.add(CoinPrice("custom_safe-bep20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp/1000))
                         manager.handleUpdated(safeCoinPriceList, currencyCode)

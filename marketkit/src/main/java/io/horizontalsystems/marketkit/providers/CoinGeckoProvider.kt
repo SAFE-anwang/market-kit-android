@@ -1,5 +1,6 @@
 package io.horizontalsystems.marketkit.providers
 
+import io.horizontalsystems.marketkit.SafeExtend.isSafeCoin
 import io.horizontalsystems.marketkit.models.*
 import io.reactivex.Single
 import okhttp3.internal.connection.Exchange
@@ -19,7 +20,7 @@ class CoinGeckoProvider(private val baseUrl: String) {
     }
 
     fun marketTickersSingle(coinGeckoId: String): Single<CoinGeckoCoinResponse> {
-        val coinGeckoUid = if (coinGeckoId == "safe-coin") "safe-anwang" else coinGeckoId
+        val coinGeckoUid = if (coinGeckoId.isSafeCoin()) "safe-anwang" else coinGeckoId
         return coinGeckoService.marketTickers(
             coinGeckoUid,
             "true",
@@ -36,7 +37,7 @@ class CoinGeckoProvider(private val baseUrl: String) {
     }
 
     fun marketTickersSingleSafe(coinGeckoId: String): Single<CoinGeckoCoinResponse> {
-        val coinGeckoUid = if (coinGeckoId == "safe-coin") "safe-anwang" else coinGeckoId
+        val coinGeckoUid = if (coinGeckoId.isSafeCoin()) "safe-anwang" else coinGeckoId
         return safeService.marketTickers(
             coinGeckoUid,
             "true",

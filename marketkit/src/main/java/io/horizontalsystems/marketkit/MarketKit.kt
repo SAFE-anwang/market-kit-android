@@ -2,6 +2,7 @@ package io.horizontalsystems.marketkit
 
 import android.content.Context
 import android.os.storage.StorageManager
+import io.horizontalsystems.marketkit.SafeExtend.isSafeCoin
 import io.horizontalsystems.marketkit.chart.HsChartRequestHelper
 import io.horizontalsystems.marketkit.managers.CoinHistoricalPriceManager
 import io.horizontalsystems.marketkit.managers.CoinManager
@@ -160,7 +161,7 @@ class MarketKit(
         language: String,
         apiTag: String,
     ): Single<MarketInfoOverview> {
-        return if (coinUid == "safe-coin") {
+        return if (coinUid.isSafeCoin()) {
             hsProvider.getSafeMarketInfoOverview(
                     coinUid = "safe-anwang",
                     currencyCode = currencyCode,
@@ -316,7 +317,7 @@ class MarketKit(
         val currentTime = Date().time / 1000
         val fromTimestamp = HsChartRequestHelper.fromTimestamp(currentTime, periodType)
         val interval = HsPointTimePeriod.Day1
-        return if (coinUid == "safe-coin") {
+        return if (coinUid.isSafeCoin()) {
             hsProvider.coinSafePriceChartSingle("safe-anwang", currencyCode, interval, fromTimestamp)
                 .map { response ->
                     response.mapNotNull { chartCoinPrice ->
@@ -495,7 +496,7 @@ class MarketKit(
         periodType: HsPeriodType
     ): Single<Pair<Long, List<ChartPoint>>> {
         val data = intervalData(periodType)
-        return if (coinUid == "safe-coin") {
+        return if (coinUid.isSafeCoin()) {
             return hsProvider.coinSafePriceChartSingle("safe-anwang", currencyCode, data.interval, data.fromTimestamp)
                     .map {
                         Pair(data.visibleTimestamp, it.map { it.chartPoint })
@@ -536,7 +537,7 @@ class MarketKit(
     }
 
     fun chartStartTimeSingle(coinUid: String): Single<Long> {
-        return if (coinUid == "safe-coin") {
+        return if (coinUid.isSafeCoin()) {
             hsProvider.coinSafePriceChartStartTime("safe-anwang")
         } else{
             hsProvider.coinPriceChartStartTime(coinUid)
