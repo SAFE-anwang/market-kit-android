@@ -281,7 +281,8 @@ class MarketKit(
     // Market Tickers
 
     fun marketTickersSingle(coinUid: String): Single<List<MarketTicker>> {
-        return hsProvider.marketTickers(coinUid)
+        val tempCoinUid = if (coinUid.isSafeCoin()) "safe" else coinUid
+        return hsProvider.marketTickers(tempCoinUid)
     }
 
     // Details
