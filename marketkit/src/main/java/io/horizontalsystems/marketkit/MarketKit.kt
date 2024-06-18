@@ -400,7 +400,7 @@ class MarketKit(
         currencyCode: String,
         apiTag: String
     ): Single<Analytics> {
-        return hsProvider.safeAnalyticsSingle(apiTag, coinUid, currencyCode, authToken)
+        return hsProvider.safeAnalyticsSingle(authToken, coinUid, currencyCode, apiTag)
     }
 
     fun cexVolumeRanksSingle(

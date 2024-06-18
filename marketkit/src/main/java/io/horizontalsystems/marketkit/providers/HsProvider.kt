@@ -383,7 +383,12 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
         coinUid: String,
         currencyCode: String,
         apiTag: String): Single<Analytics> {
-        return safeService.getAnalyticsData(apiTag, coinUid, currencyCode, authToken)
+        return safeService.getAnalyticsData(
+                apiTag = apiTag,
+                authToken = authToken,
+                coinUid = coinUid,
+                currencyCode = currencyCode
+        )
     }
 
     fun rankMultiValueSingle(
