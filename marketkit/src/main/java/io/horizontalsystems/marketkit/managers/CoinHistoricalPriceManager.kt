@@ -14,6 +14,7 @@ import kotlin.math.abs
 class CoinHistoricalPriceManager(
     private val storage: CoinHistoricalPriceStorage,
     private val hsProvider: HsProvider,
+    private val isSafe4TestNet: Boolean
 ) {
 
     fun coinHistoricalPriceSingle(
@@ -23,7 +24,11 @@ class CoinHistoricalPriceManager(
     ): Single<BigDecimal> {
 
         storage.coinPrice(coinUid, currencyCode, timestamp)?.let {
-            return Single.just(it.value)
+            if (isSafe4TestNet) {
+                Single.just(BigDecimal("0"))
+            } else {
+                return Single.just(it.value)
+            }
         }
         val calendar = Calendar.getInstance()
         calendar.set(2022, 6, 28)
@@ -38,11 +43,18 @@ class CoinHistoricalPriceManager(
                     if (response.marketData.currentPrice.containsKey(currencyCode.lowercase())) {
                         val price = response.marketData.currentPrice[currencyCode.lowercase()]
                         price?.let {
-                            val coinHistoricalPrice = CoinHistoricalPrice(coinUid, currencyCode, price, timestamp)
+                            val coinHistoricalPrice = if (isSafe4TestNet) {
+                                CoinHistoricalPrice(coinUid, currencyCode, BigDecimal("0"), timestamp)
+                            } else {
+                                CoinHistoricalPrice(coinUid, currencyCode, price, timestamp)
+                            }
                             storage.save(coinHistoricalPrice)
                         }
-
-                        Single.just(price)
+                        if (isSafe4TestNet) {
+                            Single.just(BigDecimal("0"))
+                        } else {
+                            Single.just(price)
+                        }
                     } else {
                         Single.error(ProviderError.NoDataForCoin())
                     }

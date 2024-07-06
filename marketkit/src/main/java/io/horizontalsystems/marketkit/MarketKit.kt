@@ -645,6 +645,7 @@ class MarketKit(
             val coinHistoricalPriceManager = CoinHistoricalPriceManager(
                 CoinHistoricalPriceStorage(marketDatabase),
                 hsProvider,
+                isSafe4TestNet
             )
             val coinPriceSchedulerFactory = CoinPriceSchedulerFactory(coinPriceManager, hsProvider, isSafe4TestNet)
             val coinPriceSyncManager = CoinPriceSyncManager(coinPriceSchedulerFactory)
