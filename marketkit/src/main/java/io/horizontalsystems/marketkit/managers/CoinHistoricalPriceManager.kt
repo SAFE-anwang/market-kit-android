@@ -2,6 +2,7 @@ package io.horizontalsystems.marketkit.managers
 
 import io.horizontalsystems.marketkit.ProviderError
 import io.horizontalsystems.marketkit.SafeExtend.isSafeCoin
+import io.horizontalsystems.marketkit.SafeExtend.isSafeFourCoin
 import io.horizontalsystems.marketkit.models.CoinHistoricalPrice
 import io.horizontalsystems.marketkit.providers.HsProvider
 import io.horizontalsystems.marketkit.storage.CoinHistoricalPriceStorage
@@ -24,10 +25,12 @@ class CoinHistoricalPriceManager(
     ): Single<BigDecimal> {
 
         storage.coinPrice(coinUid, currencyCode, timestamp)?.let {
-            if (isSafe4TestNet) {
-                Single.just(BigDecimal("0"))
+            if (coinUid.isSafeFourCoin() && isSafe4TestNet) {
+                return Single.just(BigDecimal("0"))
             } else {
-                return Single.just(it.value)
+                if (it.value.toString() != "0") {
+                    return Single.just(it.value)
+                }
             }
         }
         val calendar = Calendar.getInstance()
@@ -43,14 +46,14 @@ class CoinHistoricalPriceManager(
                     if (response.marketData.currentPrice.containsKey(currencyCode.lowercase())) {
                         val price = response.marketData.currentPrice[currencyCode.lowercase()]
                         price?.let {
-                            val coinHistoricalPrice = if (isSafe4TestNet) {
+                            val coinHistoricalPrice = if (coinUid.isSafeFourCoin() && isSafe4TestNet) {
                                 CoinHistoricalPrice(coinUid, currencyCode, BigDecimal("0"), timestamp)
                             } else {
                                 CoinHistoricalPrice(coinUid, currencyCode, price, timestamp)
                             }
                             storage.save(coinHistoricalPrice)
                         }
-                        if (isSafe4TestNet) {
+                        if (coinUid.isSafeFourCoin() && isSafe4TestNet) {
                             Single.just(BigDecimal("0"))
                         } else {
                             Single.just(price)
