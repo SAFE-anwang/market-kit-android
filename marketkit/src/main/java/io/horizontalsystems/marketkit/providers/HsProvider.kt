@@ -5,29 +5,22 @@ import io.horizontalsystems.marketkit.SafeExtend.isSafeCoin
 import io.horizontalsystems.marketkit.models.*
 import io.reactivex.Single
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.QueryMap
 import java.math.BigDecimal
-import java.util.*
 
-class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: String?) {
+class HsProvider(baseUrl: String, apiKey: String) {
 
     private val service by lazy {
-        val headerMap = mutableMapOf<String, String>()
-        headerMap["app_platform"] = "android"
-        headerMap["app_version"] = appVersion
-        appId?.let {
-            headerMap["app_id"] = it
-        }
-        headerMap["apikey"] = apiKey
-
-        RetrofitUtils.build("${baseUrl}/v1/", headerMap)
+        RetrofitUtils.build("${baseUrl}/v1/", mapOf("apikey" to apiKey))
             .create(MarketService::class.java)
     }
 
@@ -44,10 +37,8 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
         top: Int,
         currencyCode: String,
         defi: Boolean,
-        apiTag: String,
     ): Single<List<MarketInfoRaw>> {
         return service.getMarketInfos(
-            apiTag = apiTag,
             top = top,
             currencyCode = currencyCode,
             defi = defi
@@ -57,21 +48,20 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
     fun advancedMarketInfosSingle(
         top: Int,
         currencyCode: String,
+        categoryId: Int?
     ): Single<List<MarketInfoRaw>> {
         return service.getAdvancedMarketInfos(
-            apiTag = "advanced_search",
             top = top,
-            currencyCode = currencyCode
+            currencyCode = currencyCode,
+            categoryId = categoryId
         )
     }
 
     fun marketInfosSingle(
         coinUids: List<String>,
         currencyCode: String,
-        apiTag: String,
     ): Single<List<MarketInfoRaw>> {
         return service.getMarketInfos(
-            apiTag = apiTag,
             uids = coinUids.joinToString(","),
             currencyCode = currencyCode
         )
@@ -79,23 +69,33 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
 
     fun marketSafeInfosSingle(
         coinUids: List<String>,
-        currencyCode: String,
-        apiTag: String,
+        currencyCode: String
     ): Single<List<MarketInfoRaw>> {
         return safeService.getMarketInfos(
-            apiTag = apiTag,
             uids = coinUids.joinToString(","),
             currencyCode = currencyCode
         )
     }
 
+    fun topCoinsMarketInfosSingle(
+        top: Int,
+        currencyCode: String,
+    ): Single<List<MarketInfoRaw>> {
+        return service.getTopCoinsMarketInfos(
+            top = top,
+            currencyCode = currencyCode,
+        )
+    }
+
+    fun getCategories(): Single<List<Category>> {
+        return service.getCategories()
+    }
+
     fun marketInfosSingle(
         categoryUid: String,
         currencyCode: String,
-        apiTag: String
     ): Single<List<MarketInfoRaw>> {
         return service.getMarketInfosByCategory(
-            apiTag = apiTag,
             categoryUid = categoryUid,
             currencyCode = currencyCode
         )
@@ -123,7 +123,6 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
             additionalParams["enabled_uids"] = walletCoinUids.joinToString(separator = ",")
         }
         return service.getCoinPrices(
-            apiTag = "coin_prices",
             uids = coinUids.joinToString(separator = ","),
             currencyCode = currencyCode,
             additionalParams = additionalParams
@@ -164,10 +163,8 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
         coinUid: String,
         currencyCode: String,
         language: String,
-        apiTag: String,
     ): Single<MarketInfoOverviewRaw> {
         return service.getMarketInfoOverview(
-            apiTag = apiTag,
             coinUid = coinUid,
             currencyCode = currencyCode,
             language = language
@@ -181,8 +178,8 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
         return service.globalMarketPoints(timePeriod.value, currencyCode)
     }
 
-    fun defiMarketInfosSingle(currencyCode: String, apiTag: String): Single<List<DefiMarketInfoResponse>> {
-        return service.getDefiMarketInfos(apiTag = apiTag, currencyCode = currencyCode)
+    fun defiMarketInfosSingle(currencyCode: String): Single<List<DefiMarketInfoResponse>> {
+        return service.getDefiMarketInfos(currencyCode = currencyCode)
     }
 
     fun marketInfoTvlSingle(
@@ -252,8 +249,8 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
         return service.getCoinReports(coinUid)
     }
 
-    fun topPlatformsSingle(currencyCode: String, apiTag: String): Single<List<TopPlatformResponse>> {
-        return service.getTopPlatforms(apiTag = apiTag, currencyCode = currencyCode)
+    fun topPlatformsSingle(currencyCode: String): Single<List<TopPlatformResponse>> {
+        return service.getTopPlatforms(currencyCode = currencyCode)
     }
 
     fun topPlatformMarketCapPointsSingle(
@@ -267,11 +264,9 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
 
     fun topPlatformCoinListSingle(
         chain: String,
-        currencyCode: String,
-        apiTag: String
+        currencyCode: String
     ): Single<List<MarketInfoRaw>> {
         return service.getTopPlatformCoinList(
-            apiTag = apiTag,
             chain = chain,
             currencyCode = currencyCode
         )
@@ -316,11 +311,15 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
         return service.getMarketOverview(currencyCode)
     }
 
-    fun marketTickers(coinUid: String): Single<List<MarketTicker>> {
+    fun marketGlobalSingle(currencyCode: String): Single<MarketGlobal> {
+        return service.getMarketGlobal(currencyCode)
+    }
+
+    fun marketTickers(coinUid: String, currencyCode: String): Single<List<MarketTicker>> {
         return if (coinUid.isSafeCoin()) {
-            safeService.getMarketTickers("safe-anwang")
+            safeService.getMarketTickers("safe-anwang", currencyCode)
         } else {
-            service.getMarketTickers(coinUid)
+            service.getMarketTickers(coinUid, currencyCode)
         }
     }
 
@@ -344,9 +343,8 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
         return service.getAllTokens()
     }
 
-    fun analyticsPreviewSingle(coinUid: String, addresses: List<String>, apiTag: String): Single<AnalyticsPreview> {
+    fun analyticsPreviewSingle(coinUid: String, addresses: List<String>): Single<AnalyticsPreview> {
         return service.getAnalyticsPreview(
-            apiTag = apiTag,
             coinUid = coinUid,
             address = if (addresses.isEmpty()) null else addresses.joinToString(",")
         )
@@ -356,10 +354,8 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
         authToken: String,
         coinUid: String,
         currencyCode: String,
-        apiTag: String
     ): Single<Analytics> {
         return service.getAnalyticsData(
-            apiTag = apiTag,
             authToken = authToken,
             coinUid = coinUid,
             currencyCode = currencyCode
@@ -367,7 +363,7 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
     }
 
     fun safeAnalyticsPreviewSingle(coinUid: String, addresses: List<String>, apiTag: String): Single<AnalyticsPreview> {
-        return safeService.getAnalyticsPreview(apiTag, coinUid, addresses.joinToString(","))
+        return safeService.getAnalyticsPreview(coinUid, addresses.joinToString(","))
     }
 
     fun rankValueSingle(
@@ -384,7 +380,6 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
         currencyCode: String,
         apiTag: String): Single<Analytics> {
         return safeService.getAnalyticsData(
-                apiTag = apiTag,
                 authToken = authToken,
                 coinUid = coinUid,
                 currencyCode = currencyCode
@@ -427,6 +422,27 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
         return service.getTopPairs(currencyCode, page, limit)
     }
 
+    fun sendStats(statsJson: String, appVersion: String, appId: String?): Single<Unit> {
+        return service.sendStats(
+            appPlatform = "android",
+            appVersion = appVersion,
+            appId = appId,
+            stats = statsJson
+        )
+    }
+
+    fun coinsSignalsSingle(uids: List<String>): Single<List<SignalResponse>> {
+        return service.getCoinsSignals(uids.joinToString(separator = ","))
+    }
+
+    fun etfsSingle(currencyCode: String): Single<List<EtfResponse>> {
+        return service.getEtfs(currencyCode)
+    }
+
+    fun etfPointsSingle(currencyCode: String): Single<List<EtfPointResponse>> {
+        return service.getEtfPoints(currencyCode)
+    }
+
 
     fun getCoinGeckoPrices(coinUids: List<String>, currencyCode: String): Single<List<CoinPrice>> {
         val result = coinGeckoService.getCoinPrice(coinUids.joinToString(separator = ","), currencyCode)
@@ -465,10 +481,9 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
     fun getSafeMarketInfoOverview(
             coinUid: String,
             currencyCode: String,
-            language: String,
-            apiTag: String
+            language: String
     ): Single<MarketInfoOverviewRaw> {
-        return safeService.getMarketInfoOverview(apiTag, coinUid, currencyCode, language)
+        return safeService.getMarketInfoOverview(coinUid, currencyCode, language)
     }
 
     fun getSafeCoinPrices(
@@ -481,7 +496,6 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
             additionalParams["enabled_uids"] = walletCoinUids.joinToString(separator = ",")
         }
         return safeService.getCoinPrices(
-                apiTag = "coin_prices",
                 uids = coinUids.joinToString(separator = ","),
                 currencyCode = currencyCode,
                 additionalParams = additionalParams
@@ -509,7 +523,6 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
 
         @GET("coins")
         fun getMarketInfos(
-            @Header("app_tag") apiTag: String,
             @Query("limit") top: Int,
             @Query("currency") currencyCode: String,
             @Query("defi") defi: Boolean,
@@ -517,31 +530,40 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
             @Query("fields") fields: String = marketInfoFields,
         ): Single<List<MarketInfoRaw>>
 
-        @GET("coins/filter")
-        fun getAdvancedMarketInfos(
-            @Header("app_tag") apiTag: String,
+        @GET("coins")
+        fun getTopCoinsMarketInfos(
             @Query("limit") top: Int,
             @Query("currency") currencyCode: String,
+            @Query("order_by_rank") orderByRank: Boolean = true,
+            @Query("fields") fields: String = topCoinsMarketInfoFields,
+        ): Single<List<MarketInfoRaw>>
+
+        @GET("coins/filter")
+        fun getAdvancedMarketInfos(
+            @Query("limit") top: Int,
+            @Query("currency") currencyCode: String,
+            @Query("category_id") categoryId: Int?,
             @Query("order_by_rank") orderByRank: Boolean = true,
             @Query("page") page: Int = 1,
         ): Single<List<MarketInfoRaw>>
 
         @GET("coins")
         fun getMarketInfos(
-            @Header("app_tag") apiTag: String,
             @Query("uids") uids: String,
             @Query("currency") currencyCode: String,
             @Query("fields") fields: String = marketInfoFields,
         ): Single<List<MarketInfoRaw>>
 
+        @GET("categories/")
+        fun getCategories(): Single<List<Category>>
+
         @GET("categories/{categoryUid}/coins")
         fun getMarketInfosByCategory(
-            @Header("app_tag") apiTag: String,
             @Path("categoryUid") categoryUid: String,
             @Query("currency") currencyCode: String,
         ): Single<List<MarketInfoRaw>>
 
-        @GET("categories")
+        @GET("categories/with-top-coins")
         fun getCategories(
             @Query("currency") currencyCode: String
         ): Single<List<CoinCategory>>
@@ -555,7 +577,6 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
 
         @GET("coins")
         fun getCoinPrices(
-            @Header("app_tag") apiTag: String,
             @Query("uids") uids: String,
             @Query("currency") currencyCode: String,
             @Query("fields") fields: String = coinPriceFields,
@@ -584,7 +605,6 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
 
         @GET("coins/{coinUid}")
         fun getMarketInfoOverview(
-            @Header("app_tag") apiTag: String,
             @Path("coinUid") coinUid: String,
             @Query("currency") currencyCode: String,
             @Query("language") language: String,
@@ -592,7 +612,6 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
 
         @GET("defi-protocols")
         fun getDefiMarketInfos(
-            @Header("app_tag") apiTag: String,
             @Query("currency") currencyCode: String
         ): Single<List<DefiMarketInfoResponse>>
 
@@ -604,14 +623,12 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
 
         @GET("analytics/{coinUid}/preview")
         fun getAnalyticsPreview(
-            @Header("app_tag") apiTag: String,
             @Path("coinUid") coinUid: String,
             @Query("address") address: String?,
         ): Single<AnalyticsPreview>
 
         @GET("analytics/{coinUid}")
         fun getAnalyticsData(
-            @Header("app_tag") apiTag: String,
             @Header("authorization") authToken: String,
             @Path("coinUid") coinUid: String,
             @Query("currency") currencyCode: String,
@@ -712,7 +729,6 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
 
         @GET("top-platforms")
         fun getTopPlatforms(
-            @Header("app_tag") apiTag: String,
             @Query("currency") currencyCode: String
         ): Single<List<TopPlatformResponse>>
 
@@ -731,7 +747,6 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
 
         @GET("top-platforms/{chain}/list")
         fun getTopPlatformCoinList(
-            @Header("app_tag") apiTag: String,
             @Path("chain") chain: String,
             @Query("currency") currencyCode: String,
         ): Single<List<MarketInfoRaw>>
@@ -742,9 +757,15 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
             @Query("simplified") simplified: Boolean = true
         ): Single<MarketOverviewResponse>
 
+        @GET("markets/overview-simple")
+        fun getMarketGlobal(
+            @Query("currency") currencyCode: String
+        ): Single<MarketGlobal>
+
         @GET("exchanges/tickers/{coinUid}")
         fun getMarketTickers(
-            @Path("coinUid") coinUid: String
+            @Path("coinUid") coinUid: String,
+            @Query("currency") currencyCode: String,
         ): Single<List<MarketTicker>>
 
         @GET("coins/top-movers")
@@ -786,19 +807,45 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
         @GET("exchanges/whitelist")
         fun verifiedExchangeUids(): Single<List<String>>
 
-        @GET("exchanges/top-pairs")
+        @GET("exchanges/top-market-pairs")
         fun getTopPairs(
             @Query("currency") currencyCode: String,
             @Query("page") page: Int,
             @Query("limit") limit: Int
         ): Single<List<TopPair>>
 
+        @POST("stats")
+        @Headers("Content-Type: application/json")
+        fun sendStats(
+            @Header("app_platform") appPlatform: String,
+            @Header("app_version") appVersion: String,
+            @Header("app_id") appId: String?,
+            @Body stats: String,
+        ): Single<Unit>
+
+        @GET("coins/signals")
+        fun getCoinsSignals(
+            @Query("uids") uids: String,
+        ): Single<List<SignalResponse>>
+
+        @GET("etfs")
+        fun getEtfs(
+            @Query("currency") currencyCode: String
+        ): Single<List<EtfResponse>>
+
+        @GET("etfs/total")
+        fun getEtfPoints(
+            @Query("currency") currencyCode: String
+        ): Single<List<EtfPointResponse>>
+
         companion object {
             private const val marketInfoFields =
-                "name,code,price,price_change_24h,price_change_7d,price_change_30d,market_cap_rank,coingecko_id,market_cap,market_cap_rank,total_volume"
-            private const val coinPriceFields = "price,price_change_24h,last_updated"
+                "name,code,price,price_change_1d,price_change_24h,price_change_7d,price_change_30d,price_change_90d,market_cap_rank,coingecko_id,market_cap,market_cap_rank,total_volume"
+            private const val topCoinsMarketInfoFields =
+                "price,price_change_1d,price_change_24h,price_change_7d,price_change_30d,price_change_90d,market_cap_rank,market_cap,total_volume"
+            private const val coinPriceFields = "price,price_change_1d,price_change_24h,last_updated"
             private const val advancedMarketFields =
-                "all_platforms,price,market_cap,total_volume,price_change_24h,price_change_7d,price_change_14d,price_change_30d,price_change_200d,price_change_1y,ath_percentage,atl_percentage"
+                "all_platforms,price,market_cap,total_volume,price_change_1d,price_change_24h,price_change_7d,price_change_14d,price_change_30d,price_change_200d,price_change_1y,ath_percentage,atl_percentage"
         }
     }
 
@@ -811,6 +858,11 @@ class HsProvider(baseUrl: String, apiKey: String, appVersion: String, appId: Str
 data class HistoricalCoinPriceResponse(
     val timestamp: Long,
     val price: BigDecimal,
+)
+
+data class SignalResponse(
+    val uid: String,
+    val signal: Analytics.TechnicalAdvice.Advice?
 )
 
 data class ChartStart(val timestamp: Long)

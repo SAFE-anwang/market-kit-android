@@ -155,7 +155,7 @@ data class GeckoCoinPriceResponse(
         }
         else -> {
             val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
-            CoinPrice(id, currencyCode, current_price, priceChange,
+            CoinPrice(id, currencyCode, current_price, priceChange,priceChange,
                 format.parse(lastUpdated.replace("Z", "")).time)
         }
     }

@@ -7,11 +7,12 @@ plugins {
 }
 
 android {
-    compileSdk 31
+    namespace 'io.horizontalsystems.marketkit'
+    compileSdk 34
 
     defaultConfig {
         minSdk 26
-        targetSdk 31
+        targetSdk 34
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -23,16 +24,15 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    kotlinOptions {
-        jvmTarget = '17'
-    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
 
-    namespace 'io.horizontalsystems.marketkit'
+    kotlinOptions {
+        jvmTarget = '17'
+    }
 }
 
 dependencies {

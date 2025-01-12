@@ -15,6 +15,7 @@ import java.net.Proxy
 import java.security.SecureRandom
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
+import retrofit2.converter.scalars.ScalarsConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLContext
@@ -61,6 +62,7 @@ object RetrofitUtils {
             .baseUrl(baseUrl)
             .client(client)
             .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addConverterFactory(ScalarsConverterFactory.create())
             .addConverterFactory(
                 GsonConverterFactory.create(GsonBuilder().setLenient().create())
             )
