@@ -142,9 +142,8 @@ class MarketKit(
     fun advancedMarketInfosSingle(
         top: Int = 250,
         currencyCode: String,
-        categoryId: Int?,
     ): Single<List<MarketInfo>> {
-        return hsProvider.advancedMarketInfosSingle(top, currencyCode, categoryId).map {
+        return hsProvider.advancedMarketInfosSingle(top, currencyCode).map {
             coinManager.getMarketInfos(it)
         }
     }
@@ -158,8 +157,8 @@ class MarketKit(
         }
     }
 
-    fun getCategories(): Single<List<Category>> {
-        return hsProvider.getCategories()
+    fun categoriesSingle(): Single<List<Category>> {
+        return hsProvider.categoriesSingle()
     }
 
     fun marketInfosSingle(
@@ -649,6 +648,10 @@ class MarketKit(
 
     fun requestPersonalSupport(authToken: String, username: String): Single<Response<Void>> {
         return hsProvider.requestPersonalSupport(authToken, username)
+    }
+
+    fun requestVipSupport(authToken: String, subscriptionId: String): Single<Map<String, String>> {
+        return hsProvider.requestVipSupport(authToken, subscriptionId)
     }
 
     //Misc

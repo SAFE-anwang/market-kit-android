@@ -150,11 +150,12 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
 
     fun runFetchMarketInfosByTop() {
         val top = 10
-        marketKit.advancedMarketInfosSingle(top, "USD", null)
+        marketKit.advancedMarketInfosSingle(top, "USD")
             .subscribeOn(Schedulers.io())
             .subscribe({
                 it.forEach {
                     Log.w("AAA", "marketInfo: $it")
+                    Log.w("AAA", "marketInfo categories: ${it.categoryIds}")
                 }
             }, {
                 Log.e("AAA", "marketInfosSingle Error", it)
@@ -198,7 +199,7 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
     }
 
     fun runCategories() {
-        marketKit.getCategories()
+        marketKit.categoriesSingle()
             .subscribeOn(Schedulers.io())
             .subscribe({
                 it.forEach {
@@ -692,6 +693,20 @@ class MainViewModel(private val marketKit: MarketKit) : ViewModel() {
                 }
             }, {
                 Log.e("AAA", "etfPoints Error", it)
+            })
+            .let {
+                disposables.add(it)
+            }
+    }
+
+    fun runRequestVipSupport() {
+        val subscriptionId = "unique_subscription_id"
+        marketKit.requestVipSupport("", subscriptionId)
+            .subscribeOn(Schedulers.io())
+            .subscribe({
+                Log.w("AAA", "runRequestVipSupport link: ${it}")
+            }, {
+                Log.e("AAA", "runRequestVipSupport Error", it)
             })
             .let {
                 disposables.add(it)

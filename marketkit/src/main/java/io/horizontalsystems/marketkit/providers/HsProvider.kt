@@ -48,12 +48,10 @@ class HsProvider(baseUrl: String, apiKey: String) {
     fun advancedMarketInfosSingle(
         top: Int,
         currencyCode: String,
-        categoryId: Int?
     ): Single<List<MarketInfoRaw>> {
         return service.getAdvancedMarketInfos(
             top = top,
             currencyCode = currencyCode,
-            categoryId = categoryId
         )
     }
 
@@ -87,7 +85,7 @@ class HsProvider(baseUrl: String, apiKey: String) {
         )
     }
 
-    fun getCategories(): Single<List<Category>> {
+    fun categoriesSingle(): Single<List<Category>> {
         return service.getCategories()
     }
 
@@ -414,6 +412,10 @@ class HsProvider(baseUrl: String, apiKey: String) {
         return service.requestPersonalSupport(authToken, username)
     }
 
+    fun requestVipSupport(authToken: String, subscriptionId: String): Single<Map<String, String>> {
+        return service.requestVipSupport(authToken, subscriptionId)
+    }
+
     fun verifiedExchangeUids(): Single<List<String>> {
         return service.verifiedExchangeUids()
     }
@@ -542,7 +544,6 @@ class HsProvider(baseUrl: String, apiKey: String) {
         fun getAdvancedMarketInfos(
             @Query("limit") top: Int,
             @Query("currency") currencyCode: String,
-            @Query("category_id") categoryId: Int?,
             @Query("order_by_rank") orderByRank: Boolean = true,
             @Query("page") page: Int = 1,
         ): Single<List<MarketInfoRaw>>
@@ -803,6 +804,14 @@ class HsProvider(baseUrl: String, apiKey: String) {
             @Header("authorization") auth: String,
             @Field("username") username: String,
         ): Single<Response<Void>>
+
+        @FormUrlEncoded
+        @POST("support/create-group")
+        fun requestVipSupport(
+            @Header("authorization") auth: String,
+            @Field("subscription_id") subscriptionId: String,
+            @Field("platform") platform: String = "android",
+        ): Single<Map<String, String>>
 
         @GET("exchanges/whitelist")
         fun verifiedExchangeUids(): Single<List<String>>
