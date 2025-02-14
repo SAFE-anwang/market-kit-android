@@ -120,8 +120,8 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
             tokenEntities.forEach { coinDao.insert(it) }
 
             // insert safe
-            val safeCoin = Coin("safe-coin", "SAFE", "SAFE",0,"safe-anwang")
-            val safe4Coin = Coin("safe4-coin", "SAFE4", "SAFE",0,"safe-anwang")
+            val safeCoin = Coin("safe-coin", "SAFE", "SAFE",0,"safe-anwang", "https://assets.coingecko.com/coins/images/26604/small/logo.png")
+            val safe4Coin = Coin("safe4-coin", "SAFE4", "SAFE",0,"safe-anwang", "https://assets.coingecko.com/coins/images/26604/small/logo.png")
 //            val safeErc = Coin("safe-coin", "SAFE", "SAFE",20,"safe-anwang")
 //            val safeBep = Coin("custom_safe-erc20-SAFE", "SAFE", "SAFE",20,"safe-anwang")
             coinDao.insert(safeCoin)

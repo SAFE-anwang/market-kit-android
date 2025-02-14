@@ -405,8 +405,8 @@ class MarketKit(
         return hsProvider.analyticsPreviewSingle(coinUid, addresses)
     }
 
-    fun safeAnalyticsPreviewSingle(coinUid: String, addresses: List<String>, apiTag: String): Single<AnalyticsPreview> {
-        return hsProvider.safeAnalyticsPreviewSingle(coinUid, addresses, apiTag)
+    fun safeAnalyticsPreviewSingle(coinUid: String, addresses: List<String>): Single<AnalyticsPreview> {
+        return hsProvider.safeAnalyticsPreviewSingle(coinUid, addresses)
     }
 
     fun analyticsSingle(
@@ -420,10 +420,9 @@ class MarketKit(
     fun safeAnalyticsSingle(
         authToken: String,
         coinUid: String,
-        currencyCode: String,
-        apiTag: String
+        currencyCode: String
     ): Single<Analytics> {
-        return hsProvider.safeAnalyticsSingle(authToken, coinUid, currencyCode, apiTag)
+        return hsProvider.safeAnalyticsSingle(authToken, coinUid, currencyCode)
     }
 
     fun cexVolumeRanksSingle(

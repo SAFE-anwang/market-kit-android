@@ -360,7 +360,7 @@ class HsProvider(baseUrl: String, apiKey: String) {
         )
     }
 
-    fun safeAnalyticsPreviewSingle(coinUid: String, addresses: List<String>, apiTag: String): Single<AnalyticsPreview> {
+    fun safeAnalyticsPreviewSingle(coinUid: String, addresses: List<String>): Single<AnalyticsPreview> {
         return safeService.getAnalyticsPreview(coinUid, addresses.joinToString(","))
     }
 
@@ -375,8 +375,8 @@ class HsProvider(baseUrl: String, apiKey: String) {
     fun safeAnalyticsSingle(
         authToken: String,
         coinUid: String,
-        currencyCode: String,
-        apiTag: String): Single<Analytics> {
+        currencyCode: String
+    ): Single<Analytics> {
         return safeService.getAnalyticsData(
                 authToken = authToken,
                 coinUid = coinUid,
