@@ -19,7 +19,7 @@ object SafeExtend {
     fun String?.isSafeIcon(): Boolean {
         return this?.endsWith("safe-coin@3x.png") ==true
                 || this?.endsWith("safe4-coin@3x.png") ==true
-                || this?.endsWith("custom-safe4-coin@3x.png") ==true
+                || this?.contains("custom-safe4-coin") ==true
     }
 
     fun Coin.isSafeFour(): Boolean {
