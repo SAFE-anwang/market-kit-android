@@ -1,6 +1,7 @@
 package io.horizontalsystems.marketkit.providers
 
 import android.content.Context
+import io.horizontalsystems.marketkit.SafeExtend
 import io.horizontalsystems.marketkit.managers.CoinPriceManager
 import io.horizontalsystems.marketkit.managers.ICoinPriceCoinUidDataSource
 import io.horizontalsystems.marketkit.models.CoinPrice
@@ -44,13 +45,21 @@ class CoinPriceSchedulerProvider(
     override val syncSingle: Single<Unit>
         get() {
             val (coinUids, walletUids) = combinedCoinUids
-            return if ((coinUids.contains("safe-coin") || coinUids.contains("safe4-coin")) && coinUids.size == 1) {
+            return if ((coinUids.contains("safe-coin")
+                        || coinUids.contains("safe4-coin")
+                        || coinUids.contains(SafeExtend.SAFE4_ERC_COIN_UID)
+                        || coinUids.contains(SafeExtend.SAFE4_MATIC_COIN_UID)
+                        || coinUids.contains(SafeExtend.SAFE4_BEP20_COIN_UID)
+                    ) && coinUids.size == 1) {
                 provider.getSafeCoinPrices(listOf("safe-anwang"), walletUids, currencyCode)
                     .doOnSuccess {
                         it.forEach { item ->
                             val safeCoinPriceList = mutableListOf<CoinPrice>()
                             // 新增本地safe-erc20、safe-bep20市场价格
                             safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                            safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_ERC_COIN_UID, item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                            safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_MATIC_COIN_UID, item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                            safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_BEP20_COIN_UID, item.currencyCode, item.value, item.diff, item.timestamp/1000))
                             if (isSafe4TestNet) {
                                 safeCoinPriceList.add(CoinPrice("safe4-coin", "USD", BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
                             } else {
@@ -86,6 +95,9 @@ class CoinPriceSchedulerProvider(
                         val priceList = mutableListOf<CoinPrice>()
                         safePrice?.forEach {
                             priceList.add(it.copy(coinUid = "safe-coin"))
+                            priceList.add(it.copy(coinUid = SafeExtend.SAFE4_ERC_COIN_UID))
+                            priceList.add(it.copy(coinUid = SafeExtend.SAFE4_MATIC_COIN_UID))
+                            priceList.add(it.copy(coinUid = SafeExtend.SAFE4_BEP20_COIN_UID))
                             if (isSafe4TestNet) {
                                 priceList.add(it.copy(coinUid = "safe4-coin", "USD", BigDecimal("0"), BigDecimal("0")))
                             } else {
@@ -112,6 +124,9 @@ class CoinPriceSchedulerProvider(
                         }
                         safeCoinPriceList.add(CoinPrice("custom_safe-erc20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp/1000))
                         safeCoinPriceList.add(CoinPrice("custom_safe-bep20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                        safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_ERC_COIN_UID, item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                        safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_MATIC_COIN_UID, item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                        safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_BEP20_COIN_UID, item.currencyCode, item.value, item.diff, item.timestamp/1000))
                         manager.handleUpdated(safeCoinPriceList, currencyCode)
                     }
                 }
