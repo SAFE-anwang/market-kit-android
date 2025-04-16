@@ -23,7 +23,7 @@ import java.util.logging.Logger
         GlobalMarketInfo::class,
         SyncerState::class,
     ],
-    version = 14,
+    version = 15,
     exportSchema = false
 )
 @TypeConverters(DatabaseTypeConverters::class)

@@ -141,11 +141,18 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
             val safeErcToken = TokenEntity("safe-coin", "ethereum","eip20", 18, "0xee9c1ea4dcf0aaf4ff2d78b6ff83aa69797b65eb")
             val safeBepToken = TokenEntity("safe-coin", "binance-smart-chain","eip20", 18, "0x4d7fa587ec8e50bd0e9cd837cb4da796f47218a1")
             val safeMaticToken = TokenEntity("safe-coin", "polygon-pos","eip20", 18, "0xb7dd19490951339fe65e341df6ec5f7f93ff2779")
+            val safeErcToken2 = TokenEntity("safe-coin", "ethereum","eip20", 18, "0x96f59c9d155d598d4f895f07dd6991ccb5fa7dc7")
+            val safeBepToken2 = TokenEntity("safe-coin", "binance-smart-chain","eip20", 18, "0x3a5557ad6fa16699dd56fd0e418c70c83e42240a")
+            val safeMaticToken2 = TokenEntity("safe-coin", "polygon-pos","eip20", 18, "0xe0d3ff9b473976855b2242a1a022ac66f980ce50")
+
             coinDao.insert(safeToken)
             coinDao.insert(safe4Token)
             coinDao.insert(safeErcToken)
             coinDao.insert(safeBepToken)
             coinDao.insert(safeMaticToken)
+            coinDao.insert(safeErcToken2)
+            coinDao.insert(safeBepToken2)
+            coinDao.insert(safeMaticToken2)
         }
     }
 
