@@ -77,6 +77,9 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
     fun getAllBlockchains(): List<Blockchain> =
         coinDao.getAllBlockchains().map { it.blockchain }
 
+    fun insertTokenEntity(tokenEntity: TokenEntity) =
+        coinDao.insert(tokenEntity)
+
     private fun filterByTokenQuery(query: TokenQuery): String {
         val (type, reference) = query.tokenType.values
 

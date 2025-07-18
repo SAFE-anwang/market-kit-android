@@ -613,6 +613,8 @@ class MarketKit(
     fun getTokenEntity(uids: List<String>, type: String): List<TokenEntity> =
         coinManager.getTokenEntity(uids, type)
 
+    fun insertTokenEntity(tokenEntity: TokenEntity) = coinManager.insertTokenEntity(tokenEntity)
+
     companion object {
         fun getInstance(
             context: Context,

@@ -57,6 +57,7 @@ class CoinPriceSchedulerProvider(
                             val safeCoinPriceList = mutableListOf<CoinPrice>()
                             // 新增本地safe-erc20、safe-bep20市场价格
                             safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                            safeCoinPriceList.add(CoinPrice(coinUids[0], item.currencyCode, item.value, item.diff, item.timestamp/1000))
                             safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_ERC_COIN_UID, item.currencyCode, item.value, item.diff, item.timestamp/1000))
                             safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_MATIC_COIN_UID, item.currencyCode, item.value, item.diff, item.timestamp/1000))
                             safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_BEP20_COIN_UID, item.currencyCode, item.value, item.diff, item.timestamp/1000))
@@ -102,6 +103,11 @@ class CoinPriceSchedulerProvider(
                                 priceList.add(it.copy(coinUid = "safe4-coin", "USD", BigDecimal("0"), BigDecimal("0")))
                             } else {
                                 priceList.add(it.copy(coinUid = "safe4-coin"))
+                                coinUids.forEach { uid ->
+                                    if (uid.startsWith("custom-safe4-coin")) {
+                                        priceList.add(it.copy(coinUid = uid))
+                                    }
+                                }
                             }
                         }
                         priceList.addAll(it)

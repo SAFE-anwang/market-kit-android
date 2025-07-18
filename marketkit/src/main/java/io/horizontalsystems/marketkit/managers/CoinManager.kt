@@ -78,6 +78,8 @@ class CoinManager(
         }
     }
 
+    fun insertTokenEntity(tokenEntity: TokenEntity) = storage.insertTokenEntity(tokenEntity)
+
 
     /*fun marketInfosSingle(coinUids: List<String>, currencyCode: String): Single<List<MarketInfo>> {
         // 获取Safe币价格

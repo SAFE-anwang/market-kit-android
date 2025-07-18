@@ -1,5 +1,6 @@
 package io.horizontalsystems.marketkit
 
+import io.horizontalsystems.marketkit.SafeExtend.isSafeCoin
 import io.horizontalsystems.marketkit.models.Coin
 
 object SafeExtend {
@@ -20,7 +21,7 @@ object SafeExtend {
     }
 
     fun String?.isSafeCoin(): Boolean {
-        return this == "safe-coin" || this == "safe4-coin" || this == "custom-safe4-coin"
+        return this == "safe-coin" || this == "safe4-coin" || this?.startsWith("custom-safe4-coin") == true
                 || this == SAFE4_ERC_COIN_UID
                 || this == SAFE4_MATIC_COIN_UID
                 || this == SAFE4_BEP20_COIN_UID
@@ -28,6 +29,10 @@ object SafeExtend {
 
     fun String?.isSafeFourCoin(): Boolean {
         return this == "safe4-coin"
+    }
+
+    fun String.isSafeFourCustomCoin(): Boolean {
+        return this.startsWith("custom-safe4-coin")
     }
 
     fun String?.isSafeIcon(): Boolean {
