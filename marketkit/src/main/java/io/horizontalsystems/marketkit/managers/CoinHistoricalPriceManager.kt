@@ -1,8 +1,11 @@
 package io.horizontalsystems.marketkit.managers
 
 import io.horizontalsystems.marketkit.ProviderError
+import io.horizontalsystems.marketkit.SafeExtend
+import io.horizontalsystems.marketkit.SafeExtend.isSafe4Coin
 import io.horizontalsystems.marketkit.SafeExtend.isSafeCoin
 import io.horizontalsystems.marketkit.SafeExtend.isSafeFourCoin
+import io.horizontalsystems.marketkit.SafeExtend.isSafeFourCustomCoin
 import io.horizontalsystems.marketkit.models.CoinHistoricalPrice
 import io.horizontalsystems.marketkit.providers.HsProvider
 import io.horizontalsystems.marketkit.storage.CoinHistoricalPriceStorage
@@ -37,7 +40,7 @@ class CoinHistoricalPriceManager(
         calendar.set(2022, 6, 28)
         val timestampTmp = calendar.timeInMillis
         // 从 2022-7-28开始，safe的价格从coin gecko获取
-        if (coinUid.isSafeCoin() && timestamp * 1000 >= timestampTmp) {
+        if (coinUid.isSafe4Coin() && timestamp * 1000 >= timestampTmp) {
             val date = SimpleDateFormat("dd-MM-yyyy").format(Date(timestamp * 1000))
             val coinId = "safe-anwang"
 
@@ -63,7 +66,12 @@ class CoinHistoricalPriceManager(
                     }
                 }
         }
-        return hsProvider.historicalCoinPriceSingle(coinUid, currencyCode, timestamp)
+        val uid = if (coinUid.isSafeFourCustomCoin()) {
+            SafeExtend.deployCoinHash[coinUid] ?: coinUid
+        } else {
+            coinUid
+        }
+        return hsProvider.historicalCoinPriceSingle(uid, currencyCode, timestamp)
             .flatMap { response ->
                 if (abs(timestamp - response.timestamp) < 24 * 60 * 60) {
                     val coinHistoricalPrice = CoinHistoricalPrice(coinUid, currencyCode, response.price, timestamp)

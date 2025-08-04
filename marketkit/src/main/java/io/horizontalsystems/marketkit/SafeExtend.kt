@@ -13,6 +13,10 @@ object SafeExtend {
     const val SAFE4_MATIC_COIN_UID = "polygon-pos|eip20:0xe0d3ff9b473976855b2242a1a022ac66f980ce50"
     const val SAFE4_BEP20_COIN_UID = "binance-smart-chain|eip20:0x3a5557ad6fa16699dd56fd0e418c70c83e42240a"
 
+    const val SAFE4_CUSTOM_PRFIX = "custom-safe4-coin"
+
+    val deployCoinHash = HashMap<String, String>()
+
     fun Coin.isSafeCoin(): Boolean{
         return this.uid == "safe-coin" || this.uid == "safe4-coin" || this.uid == "custom-safe4-coin"
                 || this.uid == SAFE4_ERC_COIN_UID
@@ -27,12 +31,16 @@ object SafeExtend {
                 || this == SAFE4_BEP20_COIN_UID
     }
 
+    fun String?.isSafe4Coin(): Boolean {
+        return this == "safe-coin" || this == "safe4-coin"
+    }
+
     fun String?.isSafeFourCoin(): Boolean {
         return this == "safe4-coin"
     }
 
     fun String.isSafeFourCustomCoin(): Boolean {
-        return this.startsWith("custom-safe4-coin")
+        return this.startsWith("custom-safe4-coin|eip20")
     }
 
     fun String?.isSafeIcon(): Boolean {

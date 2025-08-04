@@ -2,6 +2,7 @@ package io.horizontalsystems.marketkit.providers
 
 import android.content.Context
 import io.horizontalsystems.marketkit.SafeExtend
+import io.horizontalsystems.marketkit.SafeExtend.SAFE4_CUSTOM_PRFIX
 import io.horizontalsystems.marketkit.managers.CoinPriceManager
 import io.horizontalsystems.marketkit.managers.ICoinPriceCoinUidDataSource
 import io.horizontalsystems.marketkit.models.CoinPrice
@@ -91,7 +92,7 @@ class CoinPriceSchedulerProvider(
                     }
                 }
 
-                provider.getCoinPrices(coinUids, walletUids, currencyCode)
+                provider.getCoinPrices(getCoinUids(coinUids), getCoinUids(walletUids), currencyCode)
                     .doOnSuccess {
                         val priceList = mutableListOf<CoinPrice>()
                         safePrice?.forEach {
@@ -138,6 +139,16 @@ class CoinPriceSchedulerProvider(
                 }
             }.map {}
 
+    private fun getCoinUids(coinUids: List<String>): List<String> {
+        return coinUids.map {
+            if (SafeExtend.deployCoinHash[it]?.isNotEmpty() == true) {
+                SafeExtend.deployCoinHash[it]!!
+            } else {
+                it
+            }
+        }
+    }
+
     private val allCoinUids: List<String>
         get() = dataSource?.allCoinUids(currencyCode) ?: listOf()
 
@@ -149,7 +160,15 @@ class CoinPriceSchedulerProvider(
     }
 
     private fun handle(updatedCoinPrices: List<CoinPrice>) {
-        manager.handleUpdated(updatedCoinPrices, currencyCode)
+        val temp = updatedCoinPrices.map { coinPrice ->
+            if (SafeExtend.deployCoinHash.containsValue(coinPrice.coinUid)) {
+                val key = SafeExtend.deployCoinHash.filter { it.value == coinPrice.coinUid }.keys
+                coinPrice.copy(coinUid = key.first())
+            } else {
+                coinPrice
+            }
+        }
+        manager.handleUpdated(temp, currencyCode)
     }
 
     private fun getSafeCoinPrice(): CoinPrice {

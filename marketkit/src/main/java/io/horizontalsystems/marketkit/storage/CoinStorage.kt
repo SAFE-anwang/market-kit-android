@@ -80,6 +80,12 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
     fun insertTokenEntity(tokenEntity: TokenEntity) =
         coinDao.insert(tokenEntity)
 
+    fun removeTokenEntity(coinUid: String, reference: String) =
+        coinDao.removeToken(coinUid, reference)
+
+    fun insertCoin(coin: Coin) =
+        coinDao.insert(coin)
+
     private fun filterByTokenQuery(query: TokenQuery): String {
         val (type, reference) = query.tokenType.values
 

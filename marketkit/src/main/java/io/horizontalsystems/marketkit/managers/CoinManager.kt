@@ -79,6 +79,9 @@ class CoinManager(
     }
 
     fun insertTokenEntity(tokenEntity: TokenEntity) = storage.insertTokenEntity(tokenEntity)
+    fun removeTokenEntity(coinUid: String, reference: String) = storage.removeTokenEntity(coinUid, reference)
+
+    fun insertCoin(coin: Coin) = storage.insertCoin(coin)
 
 
     /*fun marketInfosSingle(coinUids: List<String>, currencyCode: String): Single<List<MarketInfo>> {

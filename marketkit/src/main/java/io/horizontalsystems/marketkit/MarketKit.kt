@@ -614,6 +614,9 @@ class MarketKit(
         coinManager.getTokenEntity(uids, type)
 
     fun insertTokenEntity(tokenEntity: TokenEntity) = coinManager.insertTokenEntity(tokenEntity)
+    fun removeTokenEntity(coinUid: String, reference: String) = coinManager.removeTokenEntity(coinUid, reference)
+
+    fun insertCoin(coin: Coin) = coinManager.insertCoin(coin)
 
     companion object {
         fun getInstance(

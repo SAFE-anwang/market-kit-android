@@ -66,6 +66,9 @@ interface CoinDao {
     @Query("DELETE FROM TokenEntity")
     fun deleteAllTokens()
 
+    @Query("DELETE FROM TokenEntity WHERE coinUid =:coinUid AND reference =:reference")
+    fun removeToken(coinUid: String, reference: String)
+
     data class FullCoinWrapper(
         @Embedded
         val coin: Coin,
