@@ -234,6 +234,10 @@ class MarketKit(
         return coinPriceManager.coinPrice(coinUid, currencyCode)
     }
 
+    fun deleteCoinPrice(coinUid: String) {
+        coinPriceManager.deleteCoinPrice(coinUid)
+    }
+
     fun coinPriceMap(coinUids: List<String>, currencyCode: String): Map<String, CoinPrice> {
         return coinPriceManager.coinPriceMap(coinUids, currencyCode)
     }

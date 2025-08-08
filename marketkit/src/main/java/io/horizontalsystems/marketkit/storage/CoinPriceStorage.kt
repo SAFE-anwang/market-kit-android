@@ -20,4 +20,8 @@ class CoinPriceStorage(marketDatabase: MarketDatabase) {
     fun save(coinPrices: List<CoinPrice>) {
         coinPriceDao.insert(coinPrices)
     }
+
+    fun delete(coinUid: String) {
+        coinPriceDao.delete(coinUid)
+    }
 }

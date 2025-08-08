@@ -39,6 +39,10 @@ class CoinPriceManager(
         return storage.coinPrice(coinUid, currencyCode)
     }
 
+    fun deleteCoinPrice(coinUid: String) {
+        storage.delete(coinUid)
+    }
+
     fun coinPriceMap(coinUids: List<String>, currencyCode: String): Map<String, CoinPrice> {
         val coinPriceMap = mutableMapOf<String, CoinPrice>()
 //        Log.i("safe4", "coinUids: $coinUids currencyCode: $currencyCode")

@@ -1,6 +1,7 @@
 package io.horizontalsystems.marketkit.providers
 
 import android.content.Context
+import android.util.Log
 import io.horizontalsystems.marketkit.SafeExtend
 import io.horizontalsystems.marketkit.SafeExtend.SAFE4_CUSTOM_PRFIX
 import io.horizontalsystems.marketkit.managers.CoinPriceManager
@@ -46,12 +47,12 @@ class CoinPriceSchedulerProvider(
     override val syncSingle: Single<Unit>
         get() {
             val (coinUids, walletUids) = combinedCoinUids
-            return if ((coinUids.contains("safe-coin")
-                        || coinUids.contains("safe4-coin")
+            return if (coinUids.size == 1 && (coinUids[0] == "safe-coin"
+                        || coinUids[0] == "safe4-coin"
                         || coinUids.contains(SafeExtend.SAFE4_ERC_COIN_UID)
                         || coinUids.contains(SafeExtend.SAFE4_MATIC_COIN_UID)
                         || coinUids.contains(SafeExtend.SAFE4_BEP20_COIN_UID)
-                    ) && coinUids.size == 1) {
+                    )) {
                 provider.getSafeCoinPrices(listOf("safe-anwang"), walletUids, currencyCode)
                     .doOnSuccess {
                         it.forEach { item ->
@@ -104,11 +105,6 @@ class CoinPriceSchedulerProvider(
                                 priceList.add(it.copy(coinUid = "safe4-coin", "USD", BigDecimal("0"), BigDecimal("0")))
                             } else {
                                 priceList.add(it.copy(coinUid = "safe4-coin"))
-                                coinUids.forEach { uid ->
-                                    if (uid.startsWith("custom-safe4-coin")) {
-                                        priceList.add(it.copy(coinUid = uid))
-                                    }
-                                }
                             }
                         }
                         priceList.addAll(it)

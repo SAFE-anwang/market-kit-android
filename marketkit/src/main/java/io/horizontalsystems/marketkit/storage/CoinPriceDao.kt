@@ -19,4 +19,7 @@ interface CoinPriceDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(coinPrices: List<CoinPrice>)
+
+    @Query("DELETE FROM CoinPrice WHERE coinUid=:coinUid")
+    fun delete(coinUid: String)
 }
