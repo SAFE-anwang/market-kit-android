@@ -32,14 +32,18 @@ object RetrofitUtils {
 
         val headersInterceptor = Interceptor { chain ->
             val request = chain.request()
-            var response = chain.proceed(request)
-            val requestBuilder = chain.request().newBuilder()
-            headers.forEach { (name, value) ->
-                requestBuilder.header(name, value)
+            try {
+                var response = chain.proceed(request)
+                val requestBuilder = chain.request().newBuilder()
+                headers.forEach { (name, value) ->
+                    requestBuilder.header(name, value)
+                }
+                response.close()
+                response = chain.proceed(requestBuilder.build())
+                return@Interceptor response
+            } catch (e: Exception) {
+                return@Interceptor chain.proceed(request)
             }
-            response.close()
-            response = chain.proceed(requestBuilder.build())
-            return@Interceptor response
         }
 
         return OkHttpClient.Builder()
