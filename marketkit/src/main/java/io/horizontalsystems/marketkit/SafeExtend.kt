@@ -35,6 +35,10 @@ object SafeExtend {
         return this == "safe-coin" || this == "safe4-coin"
     }
 
+    fun String?.isSafe3Coin(): Boolean {
+        return this == "safe-coin"
+    }
+
     fun String?.isSafeFourCoin(): Boolean {
         return this == "safe4-coin"
     }

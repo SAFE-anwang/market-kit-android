@@ -1,6 +1,8 @@
 package io.horizontalsystems.marketkit.models
 
 import android.os.Parcelable
+import io.horizontalsystems.marketkit.SafeExtend.isSafe3Coin
+import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import java.util.*
 
@@ -20,4 +22,6 @@ data class Blockchain(
     override fun hashCode(): Int =
         Objects.hash(type, name)
 
+    @IgnoredOnParcel
+    val coinName = name + if (type.uid.isSafe3Coin()) "3" else ""
 }
