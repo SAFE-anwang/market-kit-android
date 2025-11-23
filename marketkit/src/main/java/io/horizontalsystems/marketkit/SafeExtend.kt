@@ -1,5 +1,6 @@
 package io.horizontalsystems.marketkit
 
+import io.horizontalsystems.marketkit.SafeExtend.isSafe4Coin
 import io.horizontalsystems.marketkit.SafeExtend.isSafeCoin
 import io.horizontalsystems.marketkit.models.Coin
 
@@ -18,21 +19,21 @@ object SafeExtend {
     val deployCoinHash = HashMap<String, String>()
 
     fun Coin.isSafeCoin(): Boolean{
-        return this.uid == "safe-coin" || this.uid == "safe4-coin" || this.uid == "custom-safe4-coin"
+        return this.uid == "safe-coin" || this.uid == "safe4-coin" || this.uid == "Safe4USDT" || this.uid == "custom-safe4-coin"
                 || this.uid == SAFE4_ERC_COIN_UID
                 || this.uid == SAFE4_MATIC_COIN_UID
                 || this.uid == SAFE4_BEP20_COIN_UID
     }
 
     fun String?.isSafeCoin(): Boolean {
-        return this == "safe-coin" || this == "safe4-coin" || this?.startsWith("custom-safe4-coin") == true
+        return this == "safe-coin" || this == "safe4-coin"  || this == "Safe4USDT" || this?.startsWith("custom-safe4-coin") == true
                 || this == SAFE4_ERC_COIN_UID
                 || this == SAFE4_MATIC_COIN_UID
                 || this == SAFE4_BEP20_COIN_UID
     }
 
     fun String?.isSafe4Coin(): Boolean {
-        return this == "safe-coin" || this == "safe4-coin"
+        return this == "safe-coin" || this == "safe4-coin" || this == "Safe4USDT"
     }
 
     fun String?.isSafe3Coin(): Boolean {
@@ -40,7 +41,7 @@ object SafeExtend {
     }
 
     fun String?.isSafeFourCoin(): Boolean {
-        return this == "safe4-coin"
+        return this == "safe4-coin" || this == "Safe4USDT"
     }
 
     fun String.isSafeFourCustomCoin(): Boolean {
@@ -57,6 +58,19 @@ object SafeExtend {
     }
 
     fun Coin.isSafeFour(): Boolean {
-        return this.uid == "safe4-coin" || this.uid == "custom-safe4-coin"
+        return this.uid == "safe4-coin" || this.uid == "custom-safe4-coin" || this.uid == "Safe4USDT"
+    }
+
+    fun isSafeUsdt(contract: String?): Boolean {
+        return if (contract == null) false
+        else contract == "0x9c1246a4bb3c57303587e594a82632c3171662c9"
+    }
+
+    fun getCoinCode(code: String, contract: String? = null): String {
+        return if (isSafeUsdt(contract)) "USDT" else code
+    }
+
+    fun getCoinName(code: String, contract: String? = null): String {
+        return if (isSafeUsdt(contract)) "Safe4USDT" else code
     }
 }

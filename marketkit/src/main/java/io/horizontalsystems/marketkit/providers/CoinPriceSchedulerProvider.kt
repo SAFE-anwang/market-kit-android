@@ -49,6 +49,7 @@ class CoinPriceSchedulerProvider(
             val (coinUids, walletUids) = combinedCoinUids
             return if (coinUids.size == 1 && (coinUids[0] == "safe-coin"
                         || coinUids[0] == "safe4-coin"
+                        || coinUids[0] == "Safe4USDT"
                         || coinUids.contains(SafeExtend.SAFE4_ERC_COIN_UID)
                         || coinUids.contains(SafeExtend.SAFE4_MATIC_COIN_UID)
                         || coinUids.contains(SafeExtend.SAFE4_BEP20_COIN_UID)
@@ -65,8 +66,10 @@ class CoinPriceSchedulerProvider(
                             safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_BEP20_COIN_UID, item.currencyCode, item.value, item.diff, item.timestamp/1000))
                             if (isSafe4TestNet) {
                                 safeCoinPriceList.add(CoinPrice("safe4-coin", "USD", BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
+                                safeCoinPriceList.add(CoinPrice("Safe4USDT", "USD", BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
                             } else {
                                 safeCoinPriceList.add(CoinPrice("safe4-coin", item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                                safeCoinPriceList.add(CoinPrice("Safe4USDT", item.currencyCode, item.value, item.diff, item.timestamp/1000))
                             }
                             manager.handleUpdated(safeCoinPriceList, currencyCode)
                             saveSafePrice(item.value.toString(), item.diff.toString(), item.timestamp)
@@ -103,8 +106,10 @@ class CoinPriceSchedulerProvider(
                             priceList.add(it.copy(coinUid = SafeExtend.SAFE4_BEP20_COIN_UID))
                             if (isSafe4TestNet) {
                                 priceList.add(it.copy(coinUid = "safe4-coin", "USD", BigDecimal("0"), BigDecimal("0")))
+                                priceList.add(it.copy(coinUid = "Safe4USDT", "USD", BigDecimal("0"), BigDecimal("0")))
                             } else {
                                 priceList.add(it.copy(coinUid = "safe4-coin"))
+                                priceList.add(it.copy(coinUid = "Safe4USDT"))
                             }
                         }
                         priceList.addAll(it)
@@ -122,8 +127,10 @@ class CoinPriceSchedulerProvider(
                         safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff, item.timestamp/1000))
                         if (isSafe4TestNet) {
                             safeCoinPriceList.add(CoinPrice("safe4-coin", "USD", BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
+                            safeCoinPriceList.add(CoinPrice("Safe4USDT", "USD", BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
                         } else {
                             safeCoinPriceList.add(CoinPrice("safe4-coin", item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                            safeCoinPriceList.add(CoinPrice("Safe4USDT", item.currencyCode, item.value, item.diff, item.timestamp/1000))
                         }
                         safeCoinPriceList.add(CoinPrice("custom_safe-erc20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp/1000))
                         safeCoinPriceList.add(CoinPrice("custom_safe-bep20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp/1000))
