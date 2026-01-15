@@ -622,6 +622,8 @@ class MarketKit(
 
     fun insertCoin(coin: Coin) = coinManager.insertCoin(coin)
 
+    fun saveCoinPrice(prices: List<CoinPrice>) = coinPriceManager.handleUpdated(prices, "USD")
+
     companion object {
         fun getInstance(
             context: Context,
