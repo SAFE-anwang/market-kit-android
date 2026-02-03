@@ -502,7 +502,9 @@ class MarketKit(
     ): Single<Pair<Long, List<ChartPoint>>> {
         val data = intervalData(periodType)
         return if (coinUid.isSafeCoin()) {
-            return hsProvider.coinSafePriceChartSingle("safe-anwang", currencyCode, data.interval, data.fromTimestamp)
+            val fromTimestamp = data.fromTimestamp ?: 1658966400
+            val interval = if (data.fromTimestamp == null) HsPointTimePeriod.Week1 else data.interval
+            return hsProvider.coinSafePriceChartSingle("safe-anwang", currencyCode, interval, fromTimestamp)
                     .map {
                         Pair(data.visibleTimestamp, it.map { it.chartPoint })
                     }
