@@ -38,9 +38,6 @@ sealed class BlockchainType : Parcelable {
     object BinanceSmartChain : BlockchainType()
 
     @Parcelize
-    object BinanceChain : BlockchainType()
-
-    @Parcelize
     object Polygon : BlockchainType()
 
     @Parcelize
@@ -68,6 +65,18 @@ sealed class BlockchainType : Parcelable {
     object Ton: BlockchainType()
 
     @Parcelize
+    object Base: BlockchainType()
+
+    @Parcelize
+    object ZkSync: BlockchainType()
+
+    @Parcelize
+    object Stellar: BlockchainType()
+
+    @Parcelize
+    object Monero: BlockchainType()
+
+    @Parcelize
     class Unsupported(val _uid: String) : BlockchainType()
 
     val uid: String
@@ -83,7 +92,6 @@ sealed class BlockchainType : Parcelable {
             is Zcash -> "zcash"
             is Ethereum -> "ethereum"
             is BinanceSmartChain -> "binance-smart-chain"
-            is BinanceChain -> "binancecoin"
             is Polygon -> "polygon-pos"
             is Avalanche -> "avalanche"
             is Optimism -> "optimistic-ethereum"
@@ -93,6 +101,10 @@ sealed class BlockchainType : Parcelable {
             is Fantom -> "fantom"
             is Tron -> "tron"
             is Ton -> "the-open-network"
+            is Base -> "base"
+            is ZkSync -> "zksync"
+            is Stellar -> "stellar"
+            is Monero -> "monero"
             is Unsupported -> this._uid
         }
 
@@ -119,13 +131,16 @@ sealed class BlockchainType : Parcelable {
         Polygon -> "polygon"
         Avalanche -> "avalanche"
         ArbitrumOne -> "arbitrumOne"
-        BinanceChain -> "binanceChain"
         Optimism -> "optimism"
         Solana -> "solana"
         Gnosis -> "gnosis"
         Fantom -> "fantom"
         Tron -> "tron"
         Ton -> "the-open-network"
+        Base -> "base"
+        ZkSync -> "zksync"
+        Stellar -> "stellar"
+        Monero -> "monero"
         is Unsupported -> "unsupported|$uid"
     }
 
@@ -144,7 +159,6 @@ sealed class BlockchainType : Parcelable {
                 "zcash" -> Zcash
                 "ethereum" -> Ethereum
                 "binance-smart-chain" -> BinanceSmartChain
-                "binancecoin" -> BinanceChain
                 "polygon-pos" -> Polygon
                 "avalanche" -> Avalanche
                 "optimistic-ethereum" -> Optimism
@@ -154,6 +168,10 @@ sealed class BlockchainType : Parcelable {
                 "fantom" -> Fantom
                 "tron" -> Tron
                 "the-open-network" -> Ton
+                "base" -> Base
+                "zksync" -> ZkSync
+                "stellar" -> Stellar
+                "monero" -> Monero
                 else -> Unsupported(uid)
             }
 

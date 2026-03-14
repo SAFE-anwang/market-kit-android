@@ -38,6 +38,9 @@ interface CoinDao {
     @Query("SELECT * FROM Coin WHERE uid IN (:uids)")
     fun getFullCoins(uids: List<String>): List<FullCoinWrapper>
 
+    @Query("SELECT * FROM Coin WHERE code IN (:coinCodes)")
+    fun getFullCoinsByCoinCodes(coinCodes: List<String>): List<FullCoinWrapper>
+
     @Transaction
     @Query("SELECT * FROM TokenEntity WHERE blockchainUid = :type and coinUid IN (:uids)")
     fun getTokenEntity(uids: List<String>, type: String): List<TokenEntity>

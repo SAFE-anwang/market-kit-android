@@ -6,6 +6,8 @@ import java.math.BigDecimal
 data class MarketInfoRaw(
     val uid: String,
     val price: BigDecimal?,
+    @SerializedName("price_change_1d")
+    val priceChange1d: BigDecimal?,
     @SerializedName("price_change_24h")
     val priceChange24h: BigDecimal?,
     @SerializedName("price_change_7d")
@@ -14,10 +16,20 @@ data class MarketInfoRaw(
     val priceChange14d: BigDecimal?,
     @SerializedName("price_change_30d")
     val priceChange30d: BigDecimal?,
+    @SerializedName("price_change_90d")
+    val priceChange90d: BigDecimal?,
     @SerializedName("price_change_200d")
     val priceChange200d: BigDecimal?,
     @SerializedName("price_change_1y")
     val priceChange1y: BigDecimal?,
+    @SerializedName("price_change_2y")
+    val priceChange2y: BigDecimal?,
+    @SerializedName("price_change_3y")
+    val priceChange3y: BigDecimal?,
+    @SerializedName("price_change_4y")
+    val priceChange4y: BigDecimal?,
+    @SerializedName("price_change_5y")
+    val priceChange5y: BigDecimal?,
     @SerializedName("market_cap")
     val marketCap: BigDecimal?,
     @SerializedName("market_cap_rank")
@@ -38,4 +50,6 @@ data class MarketInfoRaw(
     val goodDistribution: Boolean?,
     @SerializedName("indicators_result")
     val advice: Analytics.TechnicalAdvice.Advice?,
+    @SerializedName("category_ids")
+    val categoryIds: List<Int>?
 )

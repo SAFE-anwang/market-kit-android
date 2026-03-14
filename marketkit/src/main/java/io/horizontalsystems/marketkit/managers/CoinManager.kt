@@ -1,5 +1,6 @@
 package io.horizontalsystems.marketkit.managers
 
+import android.util.Log
 import io.horizontalsystems.marketkit.models.Blockchain
 import io.horizontalsystems.marketkit.models.BlockchainType
 import io.horizontalsystems.marketkit.models.Coin
@@ -30,11 +31,17 @@ class CoinManager(
     fun fullCoin(uid: String): FullCoin? =
         storage.fullCoin(uid)
 
+    fun topFullCoins(limit: Int): List<FullCoin> =
+        storage.topFullCoins(limit)
+
     fun fullCoins(filter: String, limit: Int): List<FullCoin> =
         storage.fullCoins(filter, limit)
 
     fun fullCoins(coinUids: List<String>): List<FullCoin> =
         storage.fullCoins(coinUids)
+
+    fun fullCoinsByCoinCodes(coinCodes: List<String>): List<FullCoin> =
+        storage.fullCoinsByCoinCodes(coinCodes)
 
     fun allCoins(): List<Coin> = storage.allCoins()
 
@@ -73,6 +80,7 @@ class CoinManager(
                         }
                     )
                 } catch (e: Exception) {
+                    Log.e("CoinManager", "getMarketInfos: ", e)
                 }
             }
         }

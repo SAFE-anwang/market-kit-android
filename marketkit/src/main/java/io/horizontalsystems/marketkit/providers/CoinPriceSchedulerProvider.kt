@@ -46,33 +46,32 @@ class CoinPriceSchedulerProvider(
 
     override val syncSingle: Single<Unit>
         get() {
-            val (coinUids, walletUids) = combinedCoinUids
+            val coinUids = allCoinUids
             return if (coinUids.size == 1 && (coinUids[0] == "safe-coin"
                         || coinUids[0] == "safe4-coin"
-                        || coinUids[0] == "Safe4USDT"
                         || coinUids.contains(SafeExtend.SAFE4_ERC_COIN_UID)
                         || coinUids.contains(SafeExtend.SAFE4_MATIC_COIN_UID)
                         || coinUids.contains(SafeExtend.SAFE4_BEP20_COIN_UID)
                     )) {
-                provider.getSafeCoinPrices(listOf("safe-anwang"), walletUids, currencyCode)
+                provider.getSafeCoinPrices(listOf("safe-anwang"), coinUids, currencyCode)
                     .doOnSuccess {
                         it.forEach { item ->
                             val safeCoinPriceList = mutableListOf<CoinPrice>()
                             // 新增本地safe-erc20、safe-bep20市场价格
-                            safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff, item.timestamp/1000))
-                            safeCoinPriceList.add(CoinPrice(coinUids[0], item.currencyCode, item.value, item.diff, item.timestamp/1000))
-                            safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_ERC_COIN_UID, item.currencyCode, item.value, item.diff, item.timestamp/1000))
-                            safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_MATIC_COIN_UID, item.currencyCode, item.value, item.diff, item.timestamp/1000))
-                            safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_BEP20_COIN_UID, item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                            safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
+                            safeCoinPriceList.add(CoinPrice(coinUids[0], item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
+                            safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_ERC_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
+                            safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_MATIC_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
+                            safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_BEP20_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
                             if (isSafe4TestNet) {
-                                safeCoinPriceList.add(CoinPrice("safe4-coin", "USD", BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
-                                safeCoinPriceList.add(CoinPrice("Safe4USDT", "USD", BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
+                                safeCoinPriceList.add(CoinPrice("safe4-coin", "USD", BigDecimal("0"), BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
+                                safeCoinPriceList.add(CoinPrice("Safe4USDT", "USD", BigDecimal("0"), BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
                             } else {
-                                safeCoinPriceList.add(CoinPrice("safe4-coin", item.currencyCode, item.value, item.diff, item.timestamp/1000))
-                                safeCoinPriceList.add(CoinPrice("Safe4USDT", item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                                safeCoinPriceList.add(CoinPrice("safe4-coin", item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
+//                                safeCoinPriceList.add(CoinPrice("Safe4USDT", item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
                             }
                             manager.handleUpdated(safeCoinPriceList, currencyCode)
-                            saveSafePrice(item.value.toString(), item.diff.toString(), item.timestamp)
+                            saveSafePrice(item.value.toString(), item.diff24h.toString(), item.diff1d.toString(),  item.timestamp)
                         }
                     }.map {}
             } else {
@@ -86,9 +85,9 @@ class CoinPriceSchedulerProvider(
                     Single.just(listOf<CoinPrice>(getSafeCoinPrice())).blockingGet()
                 } else {
                     try {
-                        val price = provider.getSafeCoinPrices(listOf("safe-anwang"), walletUids, currencyCode).blockingGet()
+                        val price = provider.getSafeCoinPrices(listOf("safe-anwang"), coinUids, currencyCode).blockingGet()
                         if (price != null && price.isNotEmpty()) {
-                            saveSafePrice(price[0].value.toString(), price[0].diff.toString(), price[0].timestamp)
+                            saveSafePrice(price[0].value.toString(), price[0].diff24h.toString(),  price[0].diff1d.toString(),  price[0].timestamp)
                         }
                         price
                     } catch (e: Exception) {
@@ -96,9 +95,15 @@ class CoinPriceSchedulerProvider(
                     }
                 }
 
-                provider.getCoinPrices(getCoinUids(coinUids), getCoinUids(walletUids), currencyCode)
+                provider.getCoinPrices(allCoinUids, currencyCode)
                     .doOnSuccess {
                         val priceList = mutableListOf<CoinPrice>()
+                        it.findLast {
+                            it.coinUid.lowercase() == "usdt"
+                        }?.let {
+                            // TODO safe usdt
+                            priceList.add(CoinPrice("Safe4USDT", it.currencyCode, it.value, it.diff24h, it.diff1d, it.timestamp/1000))
+                        }
                         safePrice?.forEach {
                             priceList.add(it.copy(coinUid = "safe-coin"))
                             priceList.add(it.copy(coinUid = SafeExtend.SAFE4_ERC_COIN_UID))
@@ -124,19 +129,19 @@ class CoinPriceSchedulerProvider(
                     if (item.coinUid == "safe-anwang") {
                         val safeCoinPriceList = mutableListOf<CoinPrice>()
                         // 新增本地safe-erc20、safe-bep20市场价格
-                        safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                        safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff24h,  item.diff1d,item.timestamp/1000))
                         if (isSafe4TestNet) {
-                            safeCoinPriceList.add(CoinPrice("safe4-coin", "USD", BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
-                            safeCoinPriceList.add(CoinPrice("Safe4USDT", "USD", BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
+                            safeCoinPriceList.add(CoinPrice("safe4-coin", "USD", BigDecimal("0"), BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
+                            safeCoinPriceList.add(CoinPrice("Safe4USDT", "USD", BigDecimal("0"), BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
                         } else {
-                            safeCoinPriceList.add(CoinPrice("safe4-coin", item.currencyCode, item.value, item.diff, item.timestamp/1000))
-                            safeCoinPriceList.add(CoinPrice("Safe4USDT", item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                            safeCoinPriceList.add(CoinPrice("safe4-coin", item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
+//                            safeCoinPriceList.add(CoinPrice("Safe4USDT", item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
                         }
-                        safeCoinPriceList.add(CoinPrice("custom_safe-erc20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp/1000))
-                        safeCoinPriceList.add(CoinPrice("custom_safe-bep20-SAFE", item.currencyCode, item.value, item.diff, item.timestamp/1000))
-                        safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_ERC_COIN_UID, item.currencyCode, item.value, item.diff, item.timestamp/1000))
-                        safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_MATIC_COIN_UID, item.currencyCode, item.value, item.diff, item.timestamp/1000))
-                        safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_BEP20_COIN_UID, item.currencyCode, item.value, item.diff, item.timestamp/1000))
+                        safeCoinPriceList.add(CoinPrice("custom_safe-erc20-SAFE", item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
+                        safeCoinPriceList.add(CoinPrice("custom_safe-bep20-SAFE", item.currencyCode, item.value, item.diff24h, item.diff1d,item.timestamp/1000))
+                        safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_ERC_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
+                        safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_MATIC_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
+                        safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_BEP20_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
                         manager.handleUpdated(safeCoinPriceList, currencyCode)
                     }
                 }
@@ -154,9 +159,6 @@ class CoinPriceSchedulerProvider(
 
     private val allCoinUids: List<String>
         get() = dataSource?.allCoinUids(currencyCode) ?: listOf()
-
-    private val combinedCoinUids: Pair<List<String>, List<String>>
-        get() = dataSource?.combinedCoinUids(currencyCode) ?: Pair(listOf(), listOf())
 
     override fun notifyExpired() {
         manager.notifyExpired(allCoinUids, currencyCode)
@@ -179,11 +181,12 @@ class CoinPriceSchedulerProvider(
                 ?: getDefaultSafePrice()
     }
 
-    private fun saveSafePrice(price: String, diff: String, time: Long) {
+    private fun saveSafePrice(price: String, diff: String, diff1d: String, time: Long) {
         val sp = MarketDatabase.application?.getSharedPreferences("safe_price.xml", Context.MODE_PRIVATE) ?: return
         val editor = sp.edit()
         editor.putString("price", price)
         editor.putString("diff", diff)
+        editor.putString("diff1d", diff1d)
         editor.putLong("time", time)
         editor.commit()
     }
@@ -192,11 +195,13 @@ class CoinPriceSchedulerProvider(
         val sp = MarketDatabase.application?.getSharedPreferences("safe_price.xml", Context.MODE_PRIVATE)
         val price = sp?.getString("price", "3.28741459") ?: "3.28741459"
         val diff = sp?.getString("diff", "-6.42345300") ?: "-6.42345300"
+        val diff1d = sp?.getString("diff1d", "-6.42345300") ?: "-6.42345300"
         val time = sp?.getLong("time", (System.currentTimeMillis() - 24 * 60 * 60 * 1000) / 1000)
                 ?: ((System.currentTimeMillis() - 24 * 60 * 60 * 1000) / 1000)
         return CoinPrice("safe-coin", "USD",
                 BigDecimal(price),
                 BigDecimal(diff),
+                BigDecimal(diff1d),
                 time)
     }
 

@@ -1,7 +1,14 @@
 package io.horizontalsystems.marketkit.storage
 
 import androidx.sqlite.db.SimpleSQLiteQuery
-import io.horizontalsystems.marketkit.models.*
+import io.horizontalsystems.marketkit.models.Blockchain
+import io.horizontalsystems.marketkit.models.BlockchainEntity
+import io.horizontalsystems.marketkit.models.BlockchainType
+import io.horizontalsystems.marketkit.models.Coin
+import io.horizontalsystems.marketkit.models.FullCoin
+import io.horizontalsystems.marketkit.models.Token
+import io.horizontalsystems.marketkit.models.TokenEntity
+import io.horizontalsystems.marketkit.models.TokenQuery
 
 class CoinStorage(val marketDatabase: MarketDatabase) {
 
@@ -14,6 +21,16 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
         coinDao.getCoins(coinUids)
 
     fun allCoins(): List<Coin> = coinDao.getAllCoins()
+
+    fun topFullCoins(limit: Int): List<FullCoin> {
+        val sql = """
+            SELECT * FROM Coin
+            ORDER BY ${orderByMarketCapAndName()}
+            LIMIT $limit
+        """.trimIndent()
+
+        return coinDao.getFullCoins(SimpleSQLiteQuery(sql)).map { it.fullCoin }
+    }
 
     fun fullCoins(filter: String, limit: Int): List<FullCoin> {
         val sql = """
@@ -31,6 +48,9 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
 
     fun fullCoins(uids: List<String>): List<FullCoin> =
         coinDao.getFullCoins(uids).map { it.fullCoin }
+
+    fun fullCoinsByCoinCodes(coinCodes: List<String>): List<FullCoin> =
+        coinDao.getFullCoinsByCoinCodes(coinCodes).map { it.fullCoin }
 
     fun getToken(query: TokenQuery): Token? {
         val sql = "SELECT * FROM TokenEntity WHERE ${filterByTokenQuery(query)} LIMIT 1"
@@ -95,22 +115,21 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
         )
 
         if (reference.isNotBlank()) {
-            conditions.add("`TokenEntity`.`reference` LIKE '%$reference'")
+            conditions.add("`TokenEntity`.`reference` = '$reference'")
         }
 
         return conditions.joinToString(" AND ", "(", ")")
     }
 
-    private fun filterWhereStatement(filter: String) =
-        "`Coin`.`name` LIKE '%$filter%' OR `Coin`.`code` LIKE '%$filter%'"
+    private fun filterWhereStatement(filter: String): String {
+        return if (filter.isBlank()) {
+            "`Coin`.`code` IS NOT NULL AND `Coin`.`code` != '' AND `Coin`.`name` IS NOT NULL AND `Coin`.`name` != '' AND `Coin`.`marketCapRank` IS NOT NULL"
+        } else {
+            "`Coin`.`name` LIKE '%$filter%' OR `Coin`.`code` LIKE '%$filter%'"
+        }
+    }
 
-    private fun filterOrderByStatement(filter: String) = """
-        CASE 
-            WHEN `Coin`.`code` LIKE '$filter' THEN 1 
-            WHEN `Coin`.`code` LIKE '$filter%' THEN 2 
-            WHEN `Coin`.`name` LIKE '$filter%' THEN 3 
-            ELSE 4 
-        END, 
+    private fun orderByMarketCapAndName() = """
         CASE 
             WHEN `Coin`.`marketCapRank` IS NULL THEN 1 
             ELSE 0 
@@ -118,6 +137,22 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
         `Coin`.`marketCapRank` ASC, 
         `Coin`.`name` ASC 
     """
+
+    private fun filterOrderByStatement(filter: String): String {
+        return if (filter.isBlank()) {
+            "`Coin`.`marketCapRank` ASC, `Coin`.`name` ASC"
+        } else {
+            """
+        CASE 
+            WHEN `Coin`.`code` LIKE '$filter' THEN 1 
+            WHEN `Coin`.`code` LIKE '$filter%' THEN 2 
+            WHEN `Coin`.`name` LIKE '$filter%' THEN 3 
+            ELSE 4 
+        END, 
+        ${orderByMarketCapAndName()}
+        """
+        }
+    }
 
     fun update(coins: List<Coin>, blockchainEntities: List<BlockchainEntity>, tokenEntities: List<TokenEntity>) {
         marketDatabase.runInTransaction {

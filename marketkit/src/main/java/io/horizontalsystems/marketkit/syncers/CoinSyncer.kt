@@ -57,7 +57,8 @@ class CoinSyncer(
             response.name,
             response.code.uppercase(),
             response.market_cap_rank,
-            response.coingecko_id
+            response.coingecko_id,
+            response.image
         )
 
     private fun blockchainEntity(response: BlockchainResponse): BlockchainEntity =
@@ -72,7 +73,6 @@ class CoinSyncer(
 
             when (response.type) {
                 "eip20" -> response.address
-                "bep2" -> response.symbol
                 "spl" -> response.address
                 else -> response.address
             } ?: ""

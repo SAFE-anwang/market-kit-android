@@ -10,11 +10,12 @@ data class MarketTicker(
     val marketName: String,
     @SerializedName("market_logo")
     val marketImageUrl: String?,
-    @SerializedName("price")
-    val rate: BigDecimal,
     val volume: BigDecimal,
+    @SerializedName("volume_in_currency")
+    val fiatVolume: BigDecimal,
     @SerializedName("trade_url")
     val tradeUrl: String?,
     @SerializedName("whitelisted")
-    val verified: Boolean
+    val verified: Boolean,
+    val centralized: Boolean,
 )

@@ -6,10 +6,15 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
-import io.horizontalsystems.marketkit.models.*
+import io.horizontalsystems.marketkit.models.BlockchainEntity
+import io.horizontalsystems.marketkit.models.Coin
+import io.horizontalsystems.marketkit.models.CoinHistoricalPrice
+import io.horizontalsystems.marketkit.models.CoinPrice
+import io.horizontalsystems.marketkit.models.GlobalMarketInfo
+import io.horizontalsystems.marketkit.models.SyncerState
+import io.horizontalsystems.marketkit.models.TokenEntity
 import java.io.BufferedReader
 import java.io.InputStreamReader
-//import java.util.concurrent.Executors
 import java.util.logging.Logger
 
 
@@ -91,7 +96,7 @@ abstract class MarketDatabase : RoomDatabase() {
                     insertCount++
                 }
             } catch (error: Exception) {
-                logger.warning("Error in loadInitialCoins(): ${error.message ?: error.javaClass.simpleName}")
+                logger.severe("Error in loadInitialCoins(): ${error.message ?: error.javaClass.simpleName}")
             }
 
             return insertCount
