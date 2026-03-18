@@ -98,10 +98,10 @@ class CoinPriceSchedulerProvider(
                 provider.getCoinPrices(allCoinUids, currencyCode)
                     .doOnSuccess {
                         val priceList = mutableListOf<CoinPrice>()
+                        Log.d("longwen", "priceList=$it")
                         it.findLast {
-                            it.coinUid.lowercase() == "usdt"
+                            it.coinUid.lowercase() == "tether"
                         }?.let {
-                            // TODO safe usdt
                             priceList.add(CoinPrice("Safe4USDT", it.currencyCode, it.value, it.diff24h, it.diff1d, it.timestamp/1000))
                         }
                         safePrice?.forEach {
@@ -114,7 +114,7 @@ class CoinPriceSchedulerProvider(
                                 priceList.add(it.copy(coinUid = "Safe4USDT", "USD", BigDecimal("0"), BigDecimal("0")))
                             } else {
                                 priceList.add(it.copy(coinUid = "safe4-coin"))
-                                priceList.add(it.copy(coinUid = "Safe4USDT"))
+//                                priceList.add(it.copy(coinUid = "Safe4USDT"))
                             }
                         }
                         priceList.addAll(it)
@@ -201,7 +201,7 @@ class CoinPriceSchedulerProvider(
         return CoinPrice("safe-coin", "USD",
                 BigDecimal(price),
                 BigDecimal(diff),
-                BigDecimal(diff1d),
+                BigDecimal(diff),
                 time)
     }
 

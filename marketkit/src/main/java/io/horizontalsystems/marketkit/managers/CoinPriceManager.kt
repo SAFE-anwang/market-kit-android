@@ -45,7 +45,7 @@ class CoinPriceManager(
 
     fun coinPriceMap(coinUids: List<String>, currencyCode: String): Map<String, CoinPrice> {
         val coinPriceMap = mutableMapOf<String, CoinPrice>()
-//        Log.i("safe4", "coinUids: $coinUids currencyCode: $currencyCode")
+        Log.i("safe4", "coinUids: $coinUids currencyCode: $currencyCode")
         storage.coinPrices(coinUids, currencyCode).forEach { coinPrice ->
 //            Log.i("safe4", "coinPrice: $coinPrice")
             coinPriceMap[coinPrice.coinUid] = coinPrice

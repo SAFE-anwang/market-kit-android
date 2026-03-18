@@ -168,8 +168,12 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
             val safe4Coin = Coin("safe4-coin", "SAFE", "SAFE",0,"safe-anwang")
 //            val safeErc = Coin("safe-coin", "SAFE", "SAFE",20,"safe-anwang")
 //            val safeBep = Coin("custom_safe-erc20-SAFE", "SAFE", "SAFE",20,"safe-anwang")
-            coinDao.insert(safeCoin)
-            coinDao.insert(safe4Coin)
+            try {
+                coinDao.insert(safeCoin)
+                coinDao.insert(safe4Coin)
+            } catch (e: Exception) {
+
+            }
 //            coinDao.insert(safeErc)
 //            coinDao.insert(safeBep)
 
