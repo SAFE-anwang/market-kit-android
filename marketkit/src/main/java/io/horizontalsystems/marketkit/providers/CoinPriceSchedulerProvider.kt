@@ -98,7 +98,6 @@ class CoinPriceSchedulerProvider(
                 provider.getCoinPrices(allCoinUids, currencyCode)
                     .doOnSuccess {
                         val priceList = mutableListOf<CoinPrice>()
-                        Log.d("longwen", "priceList=$it")
                         it.findLast {
                             it.coinUid.lowercase() == "tether"
                         }?.let {

@@ -77,7 +77,6 @@ class CoinHistoricalPriceManager(
                 if (abs(timestamp - response.timestamp) < 24 * 60 * 60) {
                     val coinHistoricalPrice = CoinHistoricalPrice(coinUid, currencyCode, response.price, timestamp)
                     storage.save(coinHistoricalPrice)
-                    Log.d("longwen", "uid=$uid, $coinHistoricalPrice")
                     Single.just(response.price)
                 } else {
                     Single.error(ProviderError.ReturnedTimestampIsVeryInaccurate())
