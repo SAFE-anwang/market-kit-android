@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace 'io.horizontalsystems.marketkit.demo'
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId 'io.horizontalsystems.marketkit.demo'

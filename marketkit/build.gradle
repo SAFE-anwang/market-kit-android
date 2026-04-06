@@ -16,7 +16,7 @@ kotlin {
 
 android {
     namespace 'io.horizontalsystems.marketkit'
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         minSdk 26
