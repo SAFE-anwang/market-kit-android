@@ -171,34 +171,35 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
             try {
                 coinDao.insert(safeCoin)
                 coinDao.insert(safe4Coin)
-            } catch (e: Exception) {
-
-            }
 //            coinDao.insert(safeErc)
 //            coinDao.insert(safeBep)
 
-            val safeErcBlockchain = BlockchainEntity("safe-coin", "SAFE",null)
-            val safe4Blockchain = BlockchainEntity("safe4-coin", "SAFE",null)
-//            val safeBepBlockchain = BlockchainEntity("custom_safe-bep20-SAFE", "Safe",null)
-            coinDao.insert(safeErcBlockchain)
-            coinDao.insert(safe4Blockchain)
-//            coinDao.insert(safeBepBlockchain)
+                val safeErcBlockchain = BlockchainEntity("safe-coin", "SAFE",null)
+                val safe4Blockchain = BlockchainEntity("safe4-coin", "SAFE",null)
+    //            val safeBepBlockchain = BlockchainEntity("custom_safe-bep20-SAFE", "Safe",null)
+                coinDao.insert(safeErcBlockchain)
+                coinDao.insert(safe4Blockchain)
+    //            coinDao.insert(safeBepBlockchain)
 
-            val safeToken = TokenEntity("safe-coin", "safe-coin","native", 8, "")
-            val safe4Token = TokenEntity("safe4-coin", "safe4-coin","native", 18, "")
-            val safeErcToken = TokenEntity("safe-coin", "ethereum","eip20", 18, "0xee9c1ea4dcf0aaf4ff2d78b6ff83aa69797b65eb")
-            val safeBepToken = TokenEntity("safe-coin", "binance-smart-chain","eip20", 18, "0x4d7fa587ec8e50bd0e9cd837cb4da796f47218a1")
-            val safeMaticToken = TokenEntity("safe-coin", "polygon-pos","eip20", 18, "0xb7dd19490951339fe65e341df6ec5f7f93ff2779")
-            val safeSafe4Token2 = TokenEntity("safe4-coin", "safe4-coin","eip20", 18, "0x0000000000000000000000000000000000001101")
-            val safe4TUSDToken = TokenEntity("Safe4USDT", "safe4-coin","eip20", 6, "0x9c1246a4bb3c57303587e594a82632c3171662c9")
+                val safeToken = TokenEntity("safe-coin", "safe-coin","native", 8, "")
+                val safe4Token = TokenEntity("safe4-coin", "safe4-coin","native", 18, "")
+                val safeErcToken = TokenEntity("safe-coin", "ethereum","eip20", 18, "0xee9c1ea4dcf0aaf4ff2d78b6ff83aa69797b65eb")
+                val safeBepToken = TokenEntity("safe-coin", "binance-smart-chain","eip20", 18, "0x4d7fa587ec8e50bd0e9cd837cb4da796f47218a1")
+                val safeMaticToken = TokenEntity("safe-coin", "polygon-pos","eip20", 18, "0xb7dd19490951339fe65e341df6ec5f7f93ff2779")
+                val safeSafe4Token2 = TokenEntity("safe4-coin", "safe4-coin","eip20", 18, "0x0000000000000000000000000000000000001101")
+                val safe4TUSDToken = TokenEntity("Safe4USDT", "safe4-coin","eip20", 6, "0x9c1246a4bb3c57303587e594a82632c3171662c9")
 
-            coinDao.insert(safeToken)
-            coinDao.insert(safe4Token)
-            coinDao.insert(safeErcToken)
-            coinDao.insert(safeBepToken)
-            coinDao.insert(safeMaticToken)
-            coinDao.insert(safeSafe4Token2)
-            coinDao.insert(safe4TUSDToken)
+                coinDao.insert(safeToken)
+                coinDao.insert(safe4Token)
+                coinDao.insert(safeErcToken)
+                coinDao.insert(safeBepToken)
+                coinDao.insert(safeMaticToken)
+                coinDao.insert(safeSafe4Token2)
+                coinDao.insert(safe4TUSDToken)
+
+            } catch (e: Exception) {
+
+            }
         }
     }
 
