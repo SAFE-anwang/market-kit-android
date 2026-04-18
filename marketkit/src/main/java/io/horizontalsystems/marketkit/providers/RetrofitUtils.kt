@@ -48,7 +48,7 @@ object RetrofitUtils {
         }
 
         return OkHttpClient.Builder()
-            .connectTimeout(5, TimeUnit.SECONDS)
+            .connectTimeout(60, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .addInterceptor(loggingInterceptor)
             .addInterceptor(headersInterceptor)
@@ -127,8 +127,8 @@ object RetrofitUtils {
             val builder = OkHttpClient.Builder()
             builder.sslSocketFactory(sslSocketFactory, (trustAllCerts[0] as X509TrustManager))
             builder.hostnameVerifier(HostnameVerifier { _, _ -> true })
-            builder.connectTimeout(5000, TimeUnit.MILLISECONDS)
-            builder.readTimeout(60000, TimeUnit.MILLISECONDS)
+            builder.connectTimeout(50000, TimeUnit.MILLISECONDS)
+            builder.readTimeout(600000, TimeUnit.MILLISECONDS)
             builder.addInterceptor(loggingInterceptor)
             builder.addInterceptor(headersInterceptor)
             builder.cache(cache)

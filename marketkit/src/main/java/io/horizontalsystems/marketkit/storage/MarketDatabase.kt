@@ -95,6 +95,7 @@ abstract class MarketDatabase : RoomDatabase() {
                     db.execSQL(insertStmt)
                     insertCount++
                 }
+                logger.info("loadInitialCoins() count=$insertCount")
             } catch (error: Exception) {
                 logger.severe("Error in loadInitialCoins(): ${error.message ?: error.javaClass.simpleName}")
             }
