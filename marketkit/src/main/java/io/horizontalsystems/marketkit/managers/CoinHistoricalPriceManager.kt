@@ -19,7 +19,6 @@ import kotlin.math.abs
 class CoinHistoricalPriceManager(
     private val storage: CoinHistoricalPriceStorage,
     private val hsProvider: HsProvider,
-    private val isSafe4TestNet: Boolean
 ) {
 
     fun coinHistoricalPriceSingle(
@@ -29,7 +28,7 @@ class CoinHistoricalPriceManager(
     ): Single<BigDecimal> {
 
         storage.coinPrice(coinUid, currencyCode, timestamp)?.let {
-            if (coinUid.isSafeFourCoin() && isSafe4TestNet) {
+            if (coinUid.isSafeFourCoin() && SafeExtend.isSafe4TestNet) {
                 return Single.just(BigDecimal("0"))
             } else {
                 if (it.value.toString() != "0") {
@@ -50,14 +49,14 @@ class CoinHistoricalPriceManager(
                     if (response.marketData.currentPrice.containsKey(currencyCode.lowercase())) {
                         val price = response.marketData.currentPrice[currencyCode.lowercase()]
                         price?.let {
-                            val coinHistoricalPrice = if (coinUid.isSafeFourCoin() && isSafe4TestNet) {
+                            val coinHistoricalPrice = if (coinUid.isSafeFourCoin() && SafeExtend.isSafe4TestNet) {
                                 CoinHistoricalPrice(coinUid, currencyCode, BigDecimal("0"), timestamp)
                             } else {
                                 CoinHistoricalPrice(coinUid, currencyCode, price, timestamp)
                             }
                             storage.save(coinHistoricalPrice)
                         }
-                        if (coinUid.isSafeFourCoin() && isSafe4TestNet) {
+                        if (coinUid.isSafeFourCoin() && SafeExtend.isSafe4TestNet) {
                             Single.just(BigDecimal("0"))
                         } else {
                             Single.just(price)

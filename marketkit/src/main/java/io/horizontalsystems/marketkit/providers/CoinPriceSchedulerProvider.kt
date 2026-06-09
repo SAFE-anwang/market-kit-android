@@ -25,7 +25,6 @@ class CoinPriceSchedulerProvider(
     private val currencyCode: String,
     private val manager: CoinPriceManager,
     private val provider: HsProvider,
-    private val isSafe4TestNet: Boolean
 ) : ISchedulerProvider {
 
     private var isInit = true
@@ -63,7 +62,7 @@ class CoinPriceSchedulerProvider(
                             safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_ERC_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
                             safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_MATIC_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
                             safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_BEP20_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
-                            if (isSafe4TestNet) {
+                            if (SafeExtend.isSafe4TestNet) {
                                 safeCoinPriceList.add(CoinPrice("safe4-coin", "USD", BigDecimal("0"), BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
                                 safeCoinPriceList.add(CoinPrice("Safe4USDT", "USD", BigDecimal("0"), BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
                             } else {
@@ -108,7 +107,7 @@ class CoinPriceSchedulerProvider(
                             priceList.add(it.copy(coinUid = SafeExtend.SAFE4_ERC_COIN_UID))
                             priceList.add(it.copy(coinUid = SafeExtend.SAFE4_MATIC_COIN_UID))
                             priceList.add(it.copy(coinUid = SafeExtend.SAFE4_BEP20_COIN_UID))
-                            if (isSafe4TestNet) {
+                            if (SafeExtend.isSafe4TestNet) {
                                 priceList.add(it.copy(coinUid = "safe4-coin", "USD", BigDecimal("0"), BigDecimal("0")))
                                 priceList.add(it.copy(coinUid = "Safe4USDT", "USD", BigDecimal("0"), BigDecimal("0")))
                             } else {
@@ -129,7 +128,7 @@ class CoinPriceSchedulerProvider(
                         val safeCoinPriceList = mutableListOf<CoinPrice>()
                         // 新增本地safe-erc20、safe-bep20市场价格
                         safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff24h,  item.diff1d,item.timestamp/1000))
-                        if (isSafe4TestNet) {
+                        if (SafeExtend.isSafe4TestNet) {
                             safeCoinPriceList.add(CoinPrice("safe4-coin", "USD", BigDecimal("0"), BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
                             safeCoinPriceList.add(CoinPrice("Safe4USDT", "USD", BigDecimal("0"), BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
                         } else {

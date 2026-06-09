@@ -7,10 +7,9 @@ import io.horizontalsystems.marketkit.Scheduler
 class CoinPriceSchedulerFactory(
     private val manager: CoinPriceManager,
     private val provider: HsProvider,
-    private val isSafe4TestNet: Boolean
 ) {
     fun scheduler(currencyCode: String, coinUidDataSource: ICoinPriceCoinUidDataSource): Scheduler {
-        val schedulerProvider = CoinPriceSchedulerProvider(currencyCode, manager, provider, isSafe4TestNet)
+        val schedulerProvider = CoinPriceSchedulerProvider(currencyCode, manager, provider)
         schedulerProvider.dataSource = coinUidDataSource
         return Scheduler(schedulerProvider)
     }

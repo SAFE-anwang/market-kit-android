@@ -733,7 +733,6 @@ class MarketKit(
             hsApiKey: String,
             appVersion: String,
             appId: String? = null,
-            isSafe4TestNet: Boolean = false
         ): MarketKit {
             // init cache
             (context.getSystemService(Context.STORAGE_SERVICE) as StorageManager?)?.let { storageManager ->
@@ -758,9 +757,8 @@ class MarketKit(
             val coinHistoricalPriceManager = CoinHistoricalPriceManager(
                 CoinHistoricalPriceStorage(marketDatabase),
                 hsProvider,
-                isSafe4TestNet
             )
-            val coinPriceSchedulerFactory = CoinPriceSchedulerFactory(coinPriceManager, hsProvider, isSafe4TestNet)
+            val coinPriceSchedulerFactory = CoinPriceSchedulerFactory(coinPriceManager, hsProvider)
             val coinPriceSyncManager = CoinPriceSyncManager(coinPriceSchedulerFactory)
             coinPriceManager.listener = coinPriceSyncManager
             val cryptoCompareProvider = CryptoCompareProvider()

@@ -6,6 +6,9 @@ import io.horizontalsystems.marketkit.models.Coin
 
 object SafeExtend {
 
+    @Volatile
+    var isSafe4TestNet: Boolean = false
+
     const val SAFE_ERC_COIN_UID = "ethereum|eip20:0xee9c1ea4dcf0aaf4ff2d78b6ff83aa69797b65eb"
     const val SAFE_MATIC_COIN_UID = "polygon-pos|eip20:0xb7dd19490951339fe65e341df6ec5f7f93ff2779"
     const val SAFE_BEP20_COIN_UID = "binance-smart-chain|eip20:0x4d7fa587ec8e50bd0e9cd837cb4da796f47218a1"
