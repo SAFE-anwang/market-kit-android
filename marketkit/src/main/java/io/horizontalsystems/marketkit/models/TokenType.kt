@@ -2,7 +2,9 @@ package io.horizontalsystems.marketkit.models
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
 
+@Serializable
 sealed class TokenType : Parcelable {
 
     enum class Derivation {
@@ -17,31 +19,34 @@ sealed class TokenType : Parcelable {
         Type145,
     }
 
-    @Parcelize
+    @Parcelize @Serializable
     object Native : TokenType()
 
-    @Parcelize
+    @Parcelize @Serializable
     data class Derived(val derivation: Derivation) : TokenType()
 
-    @Parcelize
+    @Parcelize @Serializable
     data class AddressTyped(val type: AddressType) : TokenType()
 
-    @Parcelize
+    @Parcelize @Serializable
     data class Eip20(val address: String) : TokenType()
 
-    @Parcelize
+    @Parcelize @Serializable
     data class Spl(val address: String) : TokenType()
 
-    @Parcelize
+    @Parcelize @Serializable
     data class Jetton(val address: String) : TokenType()
 
-    @Parcelize
+    @Parcelize @Serializable
     data class Asset(val code: String, val issuer: String) : TokenType()
 
-    @Parcelize
+    @Parcelize @Serializable
     data class ZanoAsset(val reference: String): TokenType()
 
-    @Parcelize
+    @Parcelize @Serializable
+    data class ThorchainAsset(val denom: String): TokenType()
+
+    @Parcelize @Serializable
     data class Unsupported(val type: String, val reference: String) : TokenType()
 
     val id: String
@@ -55,6 +60,7 @@ sealed class TokenType : Parcelable {
                 is AddressTyped -> listOf("address_type", type.name.lowercase())
                 is Derived -> listOf("derived", derivation.name.lowercase())
                 is ZanoAsset -> listOf("zano", reference)
+                is ThorchainAsset -> listOf("thorchain", denom)
                 is Unsupported -> if (reference.isNotBlank()) {
                     listOf("unsupported", type, reference)
                 } else {
@@ -74,6 +80,7 @@ sealed class TokenType : Parcelable {
             is AddressTyped -> Value("address_type", type.name)
             is Derived -> Value("derived", derivation.name)
             is ZanoAsset -> Value("zano", reference)
+            is ThorchainAsset -> Value("thorchain", denom)
             is Unsupported -> Value(type, reference)
         }
 
@@ -134,6 +141,12 @@ sealed class TokenType : Parcelable {
                 "zano" -> {
                     if (reference.isNotBlank()) {
                         return ZanoAsset(reference)
+                    }
+                }
+
+                "thorchain" -> {
+                    if (reference.isNotBlank()) {
+                        return ThorchainAsset(reference)
                     }
                 }
             }

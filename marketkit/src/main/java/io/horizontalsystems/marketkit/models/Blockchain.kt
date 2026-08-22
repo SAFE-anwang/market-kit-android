@@ -4,9 +4,11 @@ import android.os.Parcelable
 import io.horizontalsystems.marketkit.SafeExtend.isSafe3Coin
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
-import java.util.*
+import kotlinx.serialization.Serializable
+import java.util.Objects
 
 @Parcelize
+@Serializable
 data class Blockchain(
     val type: BlockchainType,
     val name: String,
