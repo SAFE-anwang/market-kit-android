@@ -52,6 +52,12 @@ sealed class BlockchainType : Parcelable {
     object ArbitrumOne : BlockchainType()
 
     @Parcelize @Serializable
+    object RobinhoodChain : BlockchainType()
+
+    @Parcelize @Serializable
+    object Arc : BlockchainType()
+
+    @Parcelize @Serializable
     object Solana : BlockchainType()
 
     @Parcelize @Serializable
@@ -88,6 +94,12 @@ sealed class BlockchainType : Parcelable {
     object Mayachain: BlockchainType()
 
     @Parcelize @Serializable
+    object Xrp: BlockchainType()
+
+    @Parcelize @Serializable
+    object Near: BlockchainType()
+
+    @Parcelize @Serializable
     class Unsupported(val _uid: String) : BlockchainType()
 
     val uid: String
@@ -107,6 +119,8 @@ sealed class BlockchainType : Parcelable {
             is Avalanche -> "avalanche"
             is Optimism -> "optimistic-ethereum"
             is ArbitrumOne -> "arbitrum-one"
+            is RobinhoodChain -> "robinhood"
+            is Arc -> "arc"
             is Solana -> "solana"
             is Gnosis -> "gnosis"
             is Fantom -> "fantom"
@@ -119,6 +133,8 @@ sealed class BlockchainType : Parcelable {
             is Zano -> "zano"
             is Thorchain -> "thorchain"
             is Mayachain -> "mayachain"
+            is Xrp -> "xrp"
+            is Near -> "near-protocol"
             is Unsupported -> this._uid
         }
 
@@ -145,6 +161,8 @@ sealed class BlockchainType : Parcelable {
         Polygon -> "polygon"
         Avalanche -> "avalanche"
         ArbitrumOne -> "arbitrumOne"
+        RobinhoodChain -> "robinhoodChain"
+        Arc -> "arc"
         Optimism -> "optimism"
         Solana -> "solana"
         Gnosis -> "gnosis"
@@ -158,6 +176,8 @@ sealed class BlockchainType : Parcelable {
         Zano -> "zano"
         Thorchain -> "thorchain"
         Mayachain -> "mayachain"
+        Xrp -> "xrp"
+        Near -> "near"
         is Unsupported -> "unsupported|$uid"
     }
 
@@ -180,6 +200,8 @@ sealed class BlockchainType : Parcelable {
                 "avalanche" -> Avalanche
                 "optimistic-ethereum" -> Optimism
                 "arbitrum-one" -> ArbitrumOne
+                "robinhood" -> RobinhoodChain
+                "arc" -> Arc
                 "solana" -> Solana
                 "gnosis" -> Gnosis
                 "fantom" -> Fantom
@@ -192,6 +214,8 @@ sealed class BlockchainType : Parcelable {
                 "zano" -> Zano
                 "thorchain" -> Thorchain
                 "mayachain" -> Mayachain
+                "xrp" -> Xrp
+                "near-protocol" -> Near
                 else -> Unsupported(uid)
             }
 

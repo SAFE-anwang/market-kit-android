@@ -21,18 +21,18 @@ class CoinHistoricalPriceManager(
     private val hsProvider: HsProvider,
 ) {
 
-    fun coinHistoricalPriceSingle(
+    suspend fun coinHistoricalPriceSingle(
         coinUid: String,
         currencyCode: String,
         timestamp: Long
-    ): Single<BigDecimal> {
+    ): BigDecimal {
 
         storage.coinPrice(coinUid, currencyCode, timestamp)?.let {
             if (coinUid.isSafeFourCoin() && SafeExtend.isSafe4TestNet) {
-                return Single.just(BigDecimal("0"))
+                return BigDecimal("0")
             } else {
                 if (it.value.toString() != "0") {
-                    return Single.just(it.value)
+                    return it.value
                 }
             }
         }
@@ -71,16 +71,15 @@ class CoinHistoricalPriceManager(
         } else {
             coinUid
         }
-        return hsProvider.historicalCoinPriceSingle(uid, currencyCode, timestamp)
-            .flatMap { response ->
-                if (abs(timestamp - response.timestamp) < 24 * 60 * 60) {
-                    val coinHistoricalPrice = CoinHistoricalPrice(coinUid, currencyCode, response.price, timestamp)
-                    storage.save(coinHistoricalPrice)
-                    Single.just(response.price)
-                } else {
-                    Single.error(ProviderError.ReturnedTimestampIsVeryInaccurate())
-                }
-            }
+
+        val response = hsProvider.historicalCoinPriceSingle(uid, currencyCode, timestamp)
+        if (abs(timestamp - response.timestamp) < 24 * 60 * 60) {
+            val coinHistoricalPrice = CoinHistoricalPrice(coinUid, currencyCode, response.price, timestamp)
+            storage.save(coinHistoricalPrice)
+            return response.price
+        } else {
+            throw ProviderError.ReturnedTimestampIsVeryInaccurate()
+        }
     }
 
     fun coinHistoricalPrice(coinUid: String, currencyCode: String, timestamp: Long): BigDecimal? {

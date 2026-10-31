@@ -18,13 +18,14 @@ interface ISchedulerProvider {
     val syncSingle: Single<Unit>
     val syncGeckoSingle: Single<Unit>
 
+    suspend fun sync()
     fun notifyExpired()
 }
 
 class CoinPriceSchedulerProvider(
     private val currencyCode: String,
     private val manager: CoinPriceManager,
-    private val provider: HsProvider,
+    private val provider: HsProvider
 ) : ISchedulerProvider {
 
     private var isInit = true
@@ -43,83 +44,84 @@ class CoinPriceSchedulerProvider(
     override val expirationInterval: Long
         get() = CoinPrice.expirationInterval
 
-    override val syncSingle: Single<Unit>
-        get() {
-            val coinUids = allCoinUids
-            return if (coinUids.size == 1 && (coinUids[0] == "safe-coin"
-                        || coinUids[0] == "safe4-coin"
-                        || coinUids.contains(SafeExtend.SAFE4_ERC_COIN_UID)
-                        || coinUids.contains(SafeExtend.SAFE4_MATIC_COIN_UID)
-                        || coinUids.contains(SafeExtend.SAFE4_BEP20_COIN_UID)
+    override suspend fun sync() {
+        val coinUids = allCoinUids
+        return if (coinUids.size == 1 && (coinUids[0] == "safe-coin"
+                    || coinUids[0] == "safe4-coin"
+                    || coinUids.contains(SafeExtend.SAFE4_ERC_COIN_UID)
+                    || coinUids.contains(SafeExtend.SAFE4_MATIC_COIN_UID)
+                    || coinUids.contains(SafeExtend.SAFE4_BEP20_COIN_UID)
                     )) {
-                provider.getSafeCoinPrices(listOf("safe-anwang"), coinUids, currencyCode)
-                    .doOnSuccess {
-                        it.forEach { item ->
-                            val safeCoinPriceList = mutableListOf<CoinPrice>()
-                            // 新增本地safe-erc20、safe-bep20市场价格
-                            safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
-                            safeCoinPriceList.add(CoinPrice(coinUids[0], item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
-                            safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_ERC_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
-                            safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_MATIC_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
-                            safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_BEP20_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
-                            if (SafeExtend.isSafe4TestNet) {
-                                safeCoinPriceList.add(CoinPrice("safe4-coin", "USD", BigDecimal("0"), BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
-                                safeCoinPriceList.add(CoinPrice("Safe4USDT", "USD", BigDecimal("0"), BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
-                            } else {
-                                safeCoinPriceList.add(CoinPrice("safe4-coin", item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
+            provider.getSafeCoinPrices(listOf("safe-anwang"), coinUids, currencyCode)
+                .doOnSuccess {
+                    it.forEach { item ->
+                        val safeCoinPriceList = mutableListOf<CoinPrice>()
+                        // 新增本地safe-erc20、safe-bep20市场价格
+                        safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
+                        safeCoinPriceList.add(CoinPrice(coinUids[0], item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
+                        safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_ERC_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
+                        safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_MATIC_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
+                        safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_BEP20_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
+                        if (SafeExtend.isSafe4TestNet) {
+                            safeCoinPriceList.add(CoinPrice("safe4-coin", "USD", BigDecimal("0"), BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
+                            safeCoinPriceList.add(CoinPrice("Safe4USDT", "USD", BigDecimal("0"), BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
+                        } else {
+                            safeCoinPriceList.add(CoinPrice("safe4-coin", item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
 //                                safeCoinPriceList.add(CoinPrice("Safe4USDT", item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp/1000))
-                            }
-                            manager.handleUpdated(safeCoinPriceList, currencyCode)
-                            saveSafePrice(item.value.toString(), item.diff24h.toString(), item.diff1d.toString(),  item.timestamp)
                         }
-                    }.map {}
-            } else {
-                val safePrice = if (isInit || isFirstLoad) {
-                    if (!isInit) {
-                        isFirstLoad = false
+                        manager.handleUpdated(safeCoinPriceList, currencyCode)
+                        saveSafePrice(item.value.toString(), item.diff24h.toString(), item.diff1d.toString(),  item.timestamp)
                     }
-                    if (isInit) {
-                        isInit = false
-                    }
-                    Single.just(listOf<CoinPrice>(getSafeCoinPrice())).blockingGet()
-                } else {
-                    try {
-                        val price = provider.getSafeCoinPrices(listOf("safe-anwang"), coinUids, currencyCode).blockingGet()
-                        if (price != null && price.isNotEmpty()) {
-                            saveSafePrice(price[0].value.toString(), price[0].diff24h.toString(),  price[0].diff1d.toString(),  price[0].timestamp)
-                        }
-                        price
-                    } catch (e: Exception) {
-                        Single.just(listOf<CoinPrice>()).blockingGet()
-                    }
+                }.map {}
+        } else {
+            val safePrice = if (isInit || isFirstLoad) {
+                if (!isInit) {
+                    isFirstLoad = false
                 }
-
-                provider.getCoinPrices(allCoinUids, currencyCode)
-                    .doOnSuccess {
-                        val priceList = mutableListOf<CoinPrice>()
-                        it.findLast {
-                            it.coinUid.lowercase() == "tether"
-                        }?.let {
-                            priceList.add(CoinPrice("Safe4USDT", it.currencyCode, it.value, it.diff24h, it.diff1d, it.timestamp/1000))
-                        }
-                        safePrice?.forEach {
-                            priceList.add(it.copy(coinUid = "safe-coin"))
-                            priceList.add(it.copy(coinUid = SafeExtend.SAFE4_ERC_COIN_UID))
-                            priceList.add(it.copy(coinUid = SafeExtend.SAFE4_MATIC_COIN_UID))
-                            priceList.add(it.copy(coinUid = SafeExtend.SAFE4_BEP20_COIN_UID))
-                            if (SafeExtend.isSafe4TestNet) {
-                                priceList.add(it.copy(coinUid = "safe4-coin", "USD", BigDecimal("0"), BigDecimal("0")))
-                                priceList.add(it.copy(coinUid = "Safe4USDT", "USD", BigDecimal("0"), BigDecimal("0")))
-                            } else {
-                                priceList.add(it.copy(coinUid = "safe4-coin"))
-//                                priceList.add(it.copy(coinUid = "Safe4USDT"))
-                            }
-                        }
-                        priceList.addAll(it)
-                        handle(priceList)
-                    }.map {}
+                if (isInit) {
+                    isInit = false
+                }
+                Single.just(listOf<CoinPrice>(getSafeCoinPrice())).blockingGet()
+            } else {
+                try {
+                    val price = provider.getSafeCoinPrices(listOf("safe-anwang"), coinUids, currencyCode).blockingGet()
+                    if (price != null && price.isNotEmpty()) {
+                        saveSafePrice(price[0].value.toString(), price[0].diff24h.toString(),  price[0].diff1d.toString(),  price[0].timestamp)
+                    }
+                    price
+                } catch (e: Exception) {
+                    Single.just(listOf<CoinPrice>()).blockingGet()
+                }
             }
+
+            provider.getCoinPrices(allCoinUids, currencyCode)
+                .doOnSuccess {
+                    val priceList = mutableListOf<CoinPrice>()
+                    it.findLast {
+                        it.coinUid.lowercase() == "tether"
+                    }?.let {
+                        priceList.add(CoinPrice("Safe4USDT", it.currencyCode, it.value, it.diff24h, it.diff1d, it.timestamp/1000))
+                    }
+                    safePrice?.forEach {
+                        priceList.add(it.copy(coinUid = "safe-coin"))
+                        priceList.add(it.copy(coinUid = SafeExtend.SAFE4_ERC_COIN_UID))
+                        priceList.add(it.copy(coinUid = SafeExtend.SAFE4_MATIC_COIN_UID))
+                        priceList.add(it.copy(coinUid = SafeExtend.SAFE4_BEP20_COIN_UID))
+                        if (SafeExtend.isSafe4TestNet) {
+                            priceList.add(it.copy(coinUid = "safe4-coin", "USD", BigDecimal("0"), BigDecimal("0")))
+                            priceList.add(it.copy(coinUid = "Safe4USDT", "USD", BigDecimal("0"), BigDecimal("0")))
+                        } else {
+                            priceList.add(it.copy(coinUid = "safe4-coin"))
+//                                priceList.add(it.copy(coinUid = "Safe4USDT"))
+                        }
+                    }
+                    priceList.addAll(it)
+                    handle(priceList)
+                }.map {}
         }
+        handle(provider.getCoinPrices(allCoinUids, currencyCode))
+    }
+
     override val syncGeckoSingle: Single<Unit>
         get() = provider.getCoinGeckoPrices(listOf("safe-anwang"), currencyCode)
             .doOnSuccess {

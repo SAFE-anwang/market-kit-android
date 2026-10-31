@@ -17,6 +17,8 @@ class TokenTypeSerializationTest {
         TokenType.Asset("USDC", "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"),
         TokenType.ZanoAsset("aaaabbbbccccdddd"),
         TokenType.ThorchainAsset("rune"),
+        TokenType.XrpAsset("524C555344000000000000000000000000000000", "rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De"),
+        TokenType.Nep141("usdt.tether-token.near"),
         TokenType.Unsupported("unsupported", "reference"),
     )
 

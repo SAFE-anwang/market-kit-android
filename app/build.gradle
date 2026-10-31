@@ -51,8 +51,6 @@ dependencies {
     androidTestImplementation libs.androidx.junit
     androidTestImplementation libs.androidx.espresso.core
 
-    implementation libs.rxjava
-    implementation libs.rxandroid
     implementation libs.kotlin.reflect
 
     implementation project(':marketkit')
