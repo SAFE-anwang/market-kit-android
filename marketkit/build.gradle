@@ -1,8 +1,9 @@
 plugins {
     alias libs.plugins.android.library
-    alias libs.plugins.kotlin.android
-    id 'kotlin-kapt'
-    id 'kotlin-parcelize'
+    // AGP 9 起 Kotlin 支持内置，不能再应用 org.jetbrains.kotlin.android
+    // （应用会直接抛 "no longer required for Kotlin support since AGP 9.0"）
+    alias libs.plugins.ksp
+    alias libs.plugins.kotlin.parcelize
     alias libs.plugins.kotlin.serialization
     id 'maven-publish'
 }
@@ -40,9 +41,7 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = '17'
-    }
+    // AGP 9 移除了 android.kotlinOptions，jvmTarget 统一在顶层 kotlin { compilerOptions } 里设置
     testOptions {
         targetSdk 36
     }
@@ -62,7 +61,7 @@ dependencies {
 
     //Room
     implementation libs.room.runtime
-    kapt libs.room.compiler
+    // kapt 在 AGP 9 下已不适用，Room 注解处理统一走 KSP
     ksp(libs.androidx.room.compiler)
 
     //Coroutines
