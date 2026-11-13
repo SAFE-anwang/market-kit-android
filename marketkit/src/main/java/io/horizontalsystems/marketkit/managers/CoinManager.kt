@@ -19,7 +19,6 @@ import io.horizontalsystems.marketkit.models.Token
 import io.horizontalsystems.marketkit.models.TokenEntity
 import io.horizontalsystems.marketkit.models.TokenQuery
 import io.horizontalsystems.marketkit.storage.CoinStorage
-import io.reactivex.Single
 
 class CoinManager(
     private val storage: CoinStorage,

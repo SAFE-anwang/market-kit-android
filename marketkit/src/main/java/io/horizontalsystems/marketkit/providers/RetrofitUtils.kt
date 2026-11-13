@@ -77,7 +77,7 @@ object RetrofitUtils {
         return Retrofit.Builder()
             .baseUrl(baseUrl)
             .client(client)
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addConverterFactory(ScalarsConverterFactory.create())
             .addConverterFactory(
                 GsonConverterFactory.create(GsonBuilder().setLenient().create())
             )

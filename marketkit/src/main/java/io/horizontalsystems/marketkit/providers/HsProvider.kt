@@ -43,7 +43,6 @@ import io.horizontalsystems.marketkit.models.TopPlatformResponse
 import io.horizontalsystems.marketkit.models.Vault
 import io.horizontalsystems.marketkit.SafeExtend.isSafeCoin
 import io.horizontalsystems.marketkit.models.*
-import io.reactivex.Single
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Field
@@ -462,26 +461,26 @@ class HsProvider(baseUrl: String, apiKey: String) {
         return service.getStocks(currencyCode)
     }
 
-    fun marketSafeInfosSingle(
+    suspend fun marketSafeInfosSingle(
         coinUids: List<String>,
         currencyCode: String,
         apiTag: String,
-    ): Single<List<MarketInfoRaw>> {
+    ): List<MarketInfoRaw> {
         return safeService.getMarketInfos(
             uids = coinUids.joinToString(","),
             currencyCode = currencyCode
         )
     }
 
-    fun safeAnalyticsPreviewSingle(coinUid: String, addresses: List<String>): Single<AnalyticsPreview> {
+    suspend fun safeAnalyticsPreviewSingle(coinUid: String, addresses: List<String>): AnalyticsPreview {
         return safeService.getAnalyticsPreview(coinUid, addresses.joinToString(","))
     }
 
-    fun safeAnalyticsSingle(
+    suspend fun safeAnalyticsSingle(
         authToken: String,
         coinUid: String,
         currencyCode: String,
-    ): Single<Analytics> {
+    ): Analytics {
         return safeService.getAnalyticsData(
             authToken = authToken,
             coinUid = coinUid,
@@ -489,48 +488,46 @@ class HsProvider(baseUrl: String, apiKey: String) {
         )
     }
 
-
-    fun getCoinGeckoPrices(coinUids: List<String>, currencyCode: String): Single<List<CoinPrice>> {
-        val result = coinGeckoService.getCoinPrice(coinUids.joinToString(separator = ","), currencyCode)
-        return result
-                .map { coinPrices ->
-                    coinPrices.mapNotNull { coinPriceResponse ->
-                        coinPriceResponse.coinPrice(currencyCode)
-                    }
-                }
+    suspend fun getCoinGeckoPrices(coinUids: List<String>, currencyCode: String): List<CoinPrice> {
+        return coinGeckoService.getCoinPrice(coinUids.joinToString(separator = ","), currencyCode)
+            .mapNotNull { coinPriceResponse ->
+                coinPriceResponse.coinPrice(currencyCode)
+            }
     }
 
-    fun getCoinGeckoInfo(coinUids: List<String>, currencyCode: String): Single<List<GeckoCoinPriceResponse>> {
+    suspend fun getCoinGeckoInfo(coinUids: List<String>, currencyCode: String): List<GeckoCoinPriceResponse> {
         return coinGeckoService.getCoinPrice(coinUids.joinToString(separator = ","), currencyCode)
     }
 
-    fun getCoinGeckoHistoryPrice(coinUid: String, date: String): Single<GeckoCoinHistoryPriceResponse> {
+    suspend fun getCoinGeckoHistoryPrice(coinUid: String, date: String): GeckoCoinHistoryPriceResponse {
         return coinGeckoService.getCoinHistoryPrice(coinUid, date)
     }
 
-    fun getCoinGeckoMarketInfoOverview(
-            coinUid: String,
-    ): Single<CoinGeckoMarketResponse> {
-        return coinGeckoService.getMarketInfoOverview(coinUid,
-                "false",
-                "true",
-                "true",
-                "false",
-                "false",
-                "false")
+    suspend fun getCoinGeckoMarketInfoOverview(
+        coinUid: String,
+    ): CoinGeckoMarketResponse {
+        return coinGeckoService.getMarketInfoOverview(
+            coinUid,
+            "false",
+            "true",
+            "true",
+            "false",
+            "false",
+            "false"
+        )
     }
 
-    fun coinSafePriceChartStartTime(coinUid: String): Single<Long> {
-        return safeService.getCoinPriceChartStart(coinUid).map { it.timestamp }
+    suspend fun coinSafePriceChartStartTime(coinUid: String): Long {
+        return safeService.getCoinPriceChartStart(coinUid).timestamp
     }
 
-    fun getSafeMarketInfoOverview(
-            coinUid: String,
-            currencyCode: String,
-            language: String,
-            roiUids: List<String>,
-            roiPeriods: List<HsTimePeriod>,
-    ): Single<MarketInfoOverviewRaw> {
+    suspend fun getSafeMarketInfoOverview(
+        coinUid: String,
+        currencyCode: String,
+        language: String,
+        roiUids: List<String>,
+        roiPeriods: List<HsTimePeriod>,
+    ): MarketInfoOverviewRaw {
         return safeService.getMarketInfoOverview(
             coinUid = coinUid,
             currencyCode = currencyCode,
@@ -543,35 +540,29 @@ class HsProvider(baseUrl: String, apiKey: String) {
         )
     }
 
-    fun getSafeCoinPrices(
-            coinUids: List<String>,
-            walletCoinUids: List<String>,
-            currencyCode: String
-    ): Single<List<CoinPrice>> {
-        val additionalParams = mutableMapOf<String, String>()
-        if (walletCoinUids.isNotEmpty()) {
-            additionalParams["enabled_uids"] = walletCoinUids.joinToString(separator = ",")
-        }
+    suspend fun getSafeCoinPrices(
+        coinUids: List<String>,
+        walletCoinUids: List<String>,
+        currencyCode: String
+    ): List<CoinPrice> {
         return safeService.getCoinPrices(
-                uids = coinUids.joinToString(separator = ","),
-                currencyCode = currencyCode,
-        ).map { coinPrices ->
-            coinPrices.mapNotNull { coinPriceResponse ->
-                coinPriceResponse.coinPrice(currencyCode)
-            }
+            uids = coinUids.joinToString(separator = ","),
+            currencyCode = currencyCode,
+        ).mapNotNull { coinPriceResponse ->
+            coinPriceResponse.coinPrice(currencyCode)
         }
     }
 
-    fun coinSafePriceChartSingle(
-            coinUid: String,
-            currencyCode: String,
-            periodType: HsPointTimePeriod,
-            fromTimestamp: Long?
-    ): Single<List<ChartCoinPriceResponse>> {
+    suspend fun coinSafePriceChartSingle(
+        coinUid: String,
+        currencyCode: String,
+        periodType: HsPointTimePeriod,
+        fromTimestamp: Long?
+    ): List<ChartCoinPriceResponse> {
         return safeService.getCoinPriceChart(coinUid, currencyCode, fromTimestamp, periodType.value)
     }
 
-    fun getSafeMarketInfoDetails(coinUid: String, currency: String): Single<MarketInfoDetailsResponse> {
+    suspend fun getSafeMarketInfoDetails(coinUid: String, currency: String): MarketInfoDetailsResponse {
         return safeService.getMarketInfoDetails(coinUid, currency)
     }
 

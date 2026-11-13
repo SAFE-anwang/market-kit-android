@@ -2,8 +2,6 @@ package io.horizontalsystems.marketkit.providers
 
 import io.horizontalsystems.marketkit.SafeExtend.isSafeCoin
 import io.horizontalsystems.marketkit.models.*
-import io.reactivex.Single
-import okhttp3.internal.connection.Exchange
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -19,7 +17,7 @@ class CoinGeckoProvider(private val baseUrl: String) {
         RetrofitUtils.buildUnsafe("https://safewallet.anwang.com/v1/").create(CoinGeckoService::class.java)
     }
 
-    fun marketTickersSingle(coinGeckoId: String): Single<CoinGeckoCoinResponse> {
+    suspend fun marketTickersSingle(coinGeckoId: String): CoinGeckoCoinResponse {
         val coinGeckoUid = if (coinGeckoId.isSafeCoin()) "safe-anwang" else coinGeckoId
         return coinGeckoService.marketTickers(
             coinGeckoUid,
@@ -32,11 +30,11 @@ class CoinGeckoProvider(private val baseUrl: String) {
         )
     }
 
-    fun getCoinPrice(coinIds: String, currency: String): Single<List<GeckoCoinPriceResponse>> {
+    suspend fun getCoinPrice(coinIds: String, currency: String): List<GeckoCoinPriceResponse> {
         return coinGeckoService.getCoinPrice(coinIds, currency)
     }
 
-    fun marketTickersSingleSafe(coinGeckoId: String): Single<CoinGeckoCoinResponse> {
+    suspend fun marketTickersSingleSafe(coinGeckoId: String): CoinGeckoCoinResponse {
         val coinGeckoUid = if (coinGeckoId.isSafeCoin()) "safe-anwang" else coinGeckoId
         return safeService.marketTickers(
             coinGeckoUid,
@@ -49,11 +47,10 @@ class CoinGeckoProvider(private val baseUrl: String) {
         )
     }
 
-
     interface CoinGeckoService {
 
         @GET("coins/{coinId}")
-        fun marketTickers(
+        suspend fun marketTickers(
             @Path("coinId") coinId: String,
             @Query("tickers") tickers: String,
             @Query("localization") localization: String,
@@ -61,29 +58,29 @@ class CoinGeckoProvider(private val baseUrl: String) {
             @Query("community_data") communityData: String,
             @Query("developer_data") developerData: String,
             @Query("sparkline") sparkline: String,
-        ): Single<CoinGeckoCoinResponse>
+        ): CoinGeckoCoinResponse
 
         @GET("coins/markets")
-        fun getCoinPrice (
+        suspend fun getCoinPrice(
             @Query("ids") ids: String,
             @Query("vs_currency") currency: String
-        ): Single<List<GeckoCoinPriceResponse>>
+        ): List<GeckoCoinPriceResponse>
 
         @GET("simple/price")
-        fun getCoinSimplePrice (
+        suspend fun getCoinSimplePrice(
             @Query("ids") ids: String,
             @Query("vs_currencies") currency: String,
             @Query("include_24hr_change") change: Boolean = true
-        ): Single<List<GeckoCoinPriceResponse>>
+        ): List<GeckoCoinPriceResponse>
 
         @GET("coins/{id}/history")
-        fun getCoinHistoryPrice (
+        suspend fun getCoinHistoryPrice(
             @Path("id") coinId: String,
             @Query("date") date: String,
-        ): Single<GeckoCoinHistoryPriceResponse>
+        ): GeckoCoinHistoryPriceResponse
 
         @GET("coins/{coinId}")
-        fun getMarketInfoOverview(
+        suspend fun getMarketInfoOverview(
             @Path("coinId") coinId: String,
             @Query("tickers") tickers: String,
             @Query("localization") localization: String,
@@ -91,7 +88,7 @@ class CoinGeckoProvider(private val baseUrl: String) {
             @Query("community_data") communityData: String,
             @Query("developer_data") developerData: String,
             @Query("sparkline") sparkline: String,
-        ): Single<CoinGeckoMarketResponse>
+        ): CoinGeckoMarketResponse
 
         object Response {
             data class HistoricalMarketData(

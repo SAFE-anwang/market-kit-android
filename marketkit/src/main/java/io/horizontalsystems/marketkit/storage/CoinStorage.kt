@@ -189,7 +189,7 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
 
             // insert safe
             val safeCoin = Coin("safe-coin", "SAFE", "SAFE",0,"safe-anwang", "")
-            val safe4Coin = Coin("safe4-coin", "SAFE", "SAFE",0,"safe-anwang", "")
+            val safe4Coin = Coin("safe4-coin", "SAFE4", "SAFE4",0,"safe-anwang", "")
             val safe4USDTCoin = Coin("Safe4USDT", "SAFE", "USDT",0,"safe-anwang", "")
 //            val safeErc = Coin("safe-coin", "SAFE", "SAFE",20,"safe-anwang")
 //            val safeBep = Coin("custom_safe-erc20-SAFE", "SAFE", "SAFE",20,"safe-anwang")
@@ -200,7 +200,7 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
 //            coinDao.insert(safeBep)
 
                 val safeErcBlockchain = BlockchainEntity("safe-coin", "SAFE",null)
-                val safe4Blockchain = BlockchainEntity("safe4-coin", "SAFE",null)
+                val safe4Blockchain = BlockchainEntity("safe4-coin", "SAFE4",null)
     //            val safeBepBlockchain = BlockchainEntity("custom_safe-bep20-SAFE", "Safe",null)
                 coinDao.insert(safeErcBlockchain)
                 coinDao.insert(safe4Blockchain)
@@ -226,6 +226,12 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
 
             }
         }
+    }
+
+    /** Force native SAFE4 coin/blockchain labels to SAFE4 (older dumps used SAFE). */
+    fun ensureSafeFourDisplay() {
+        coinDao.insert(Coin("safe4-coin", "SAFE4", "SAFE4", 0, "safe-anwang", ""))
+        coinDao.insert(BlockchainEntity("safe4-coin", "SAFE4", null))
     }
 
     fun getTokenEntity(uids: List<String>, type: String): List<TokenEntity> =

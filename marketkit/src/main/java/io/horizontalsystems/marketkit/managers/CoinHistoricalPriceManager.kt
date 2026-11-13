@@ -1,19 +1,17 @@
 package io.horizontalsystems.marketkit.managers
 
-import android.util.Log
 import io.horizontalsystems.marketkit.ProviderError
 import io.horizontalsystems.marketkit.SafeExtend
 import io.horizontalsystems.marketkit.SafeExtend.isSafe4Coin
-import io.horizontalsystems.marketkit.SafeExtend.isSafeCoin
 import io.horizontalsystems.marketkit.SafeExtend.isSafeFourCoin
 import io.horizontalsystems.marketkit.SafeExtend.isSafeFourCustomCoin
 import io.horizontalsystems.marketkit.models.CoinHistoricalPrice
 import io.horizontalsystems.marketkit.providers.HsProvider
 import io.horizontalsystems.marketkit.storage.CoinHistoricalPriceStorage
-import io.reactivex.Single
 import java.math.BigDecimal
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Date
 import kotlin.math.abs
 
 class CoinHistoricalPriceManager(
@@ -44,27 +42,25 @@ class CoinHistoricalPriceManager(
             val date = SimpleDateFormat("dd-MM-yyyy").format(Date(timestamp * 1000))
             val coinId = "safe-anwang"
 
-            return hsProvider.getCoinGeckoHistoryPrice(coinId, date)
-                .flatMap { response ->
-                    if (response.marketData.currentPrice.containsKey(currencyCode.lowercase())) {
-                        val price = response.marketData.currentPrice[currencyCode.lowercase()]
-                        price?.let {
-                            val coinHistoricalPrice = if (coinUid.isSafeFourCoin() && SafeExtend.isSafe4TestNet) {
-                                CoinHistoricalPrice(coinUid, currencyCode, BigDecimal("0"), timestamp)
-                            } else {
-                                CoinHistoricalPrice(coinUid, currencyCode, price, timestamp)
-                            }
-                            storage.save(coinHistoricalPrice)
-                        }
-                        if (coinUid.isSafeFourCoin() && SafeExtend.isSafe4TestNet) {
-                            Single.just(BigDecimal("0"))
-                        } else {
-                            Single.just(price)
-                        }
+            val response = hsProvider.getCoinGeckoHistoryPrice(coinId, date)
+            if (response.marketData.currentPrice.containsKey(currencyCode.lowercase())) {
+                val price = response.marketData.currentPrice[currencyCode.lowercase()]
+                price?.let {
+                    val coinHistoricalPrice = if (coinUid.isSafeFourCoin() && SafeExtend.isSafe4TestNet) {
+                        CoinHistoricalPrice(coinUid, currencyCode, BigDecimal("0"), timestamp)
                     } else {
-                        Single.error(ProviderError.NoDataForCoin())
+                        CoinHistoricalPrice(coinUid, currencyCode, price, timestamp)
                     }
+                    storage.save(coinHistoricalPrice)
                 }
+                return if (coinUid.isSafeFourCoin() && SafeExtend.isSafe4TestNet) {
+                    BigDecimal("0")
+                } else {
+                    price ?: throw ProviderError.NoDataForCoin()
+                }
+            } else {
+                throw ProviderError.NoDataForCoin()
+            }
         }
         val uid = if (coinUid.isSafeFourCustomCoin()) {
             SafeExtend.deployCoinHash[coinUid] ?: coinUid

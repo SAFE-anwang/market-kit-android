@@ -40,6 +40,7 @@ import io.horizontalsystems.marketkit.models.MarketInfoDetails
 import io.horizontalsystems.marketkit.models.MarketInfoOverview
 import io.horizontalsystems.marketkit.models.MarketOverview
 import io.horizontalsystems.marketkit.models.MarketTicker
+import io.horizontalsystems.marketkit.models.NftTopCollection
 import io.horizontalsystems.marketkit.models.Post
 import io.horizontalsystems.marketkit.models.RankMultiValue
 import io.horizontalsystems.marketkit.models.RankValue
@@ -64,7 +65,6 @@ import io.horizontalsystems.marketkit.storage.GlobalMarketInfoStorage
 import io.horizontalsystems.marketkit.storage.MarketDatabase
 import io.horizontalsystems.marketkit.syncers.CoinSyncer
 import io.horizontalsystems.marketkit.syncers.HsDataSyncer
-import io.reactivex.Single
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import retrofit2.Response
@@ -530,7 +530,7 @@ class MarketKit(
             val fromTimestamp = data.fromTimestamp ?: 1658966400
             val interval = if (data.fromTimestamp == null) HsPointTimePeriod.Week1 else data.interval
             hsProvider.coinSafePriceChartSingle("safe-anwang", currencyCode, interval, fromTimestamp)
-                .map {
+                .let {
                     Pair(data.visibleTimestamp, it.map { it.chartPoint })
                 }
         } else {
@@ -617,6 +617,9 @@ class MarketKit(
     ): List<MarketInfo> {
         return coinManager.getMarketInfos(hsProvider.topPlatformCoinListSingle(chain, currencyCode))
     }
+
+    // NFT — provider removed upstream; stub kept for SafeWallet walletkit NFT screens.
+    suspend fun nftTopCollections(): List<NftTopCollection> = emptyList()
 
     // Auth
 
@@ -709,6 +712,7 @@ class MarketKit(
             val dumpManager = DumpManager(marketDatabase)
             val hsProvider = HsProvider(hsApiBaseUrl, hsApiKey)
             val coinStorage = CoinStorage(marketDatabase)
+            coinStorage.ensureSafeFourDisplay()
             val coinManager = CoinManager(coinStorage)
             val marketOverviewManager = MarketOverviewManager(hsProvider)
             val coinSyncer = CoinSyncer(hsProvider, coinStorage, marketDatabase.syncerStateDao())
