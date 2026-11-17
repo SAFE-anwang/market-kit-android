@@ -2,6 +2,7 @@ package io.horizontalsystems.marketkit.providers
 
 import android.content.Context
 import io.horizontalsystems.marketkit.SafeExtend
+import io.horizontalsystems.marketkit.SafeExtend.isSafeCoin
 import io.horizontalsystems.marketkit.managers.CoinPriceManager
 import io.horizontalsystems.marketkit.managers.ICoinPriceCoinUidDataSource
 import io.horizontalsystems.marketkit.models.CoinPrice
@@ -41,73 +42,99 @@ class CoinPriceSchedulerProvider(
 
     override suspend fun sync() {
         val coinUids = allCoinUids
-        if (coinUids.size == 1 && (coinUids[0] == "safe-coin"
-                    || coinUids[0] == "safe4-coin"
-                    || coinUids.contains(SafeExtend.SAFE4_ERC_COIN_UID)
-                    || coinUids.contains(SafeExtend.SAFE4_MATIC_COIN_UID)
-                    || coinUids.contains(SafeExtend.SAFE4_BEP20_COIN_UID)
-                    )) {
-            val prices = provider.getSafeCoinPrices(listOf("safe-anwang"), coinUids, currencyCode)
-            prices.forEach { item ->
-                val safeCoinPriceList = mutableListOf<CoinPrice>()
-                safeCoinPriceList.add(CoinPrice("safe-coin", item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp / 1000))
-                safeCoinPriceList.add(CoinPrice(coinUids[0], item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp / 1000))
-                safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_ERC_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp / 1000))
-                safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_MATIC_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp / 1000))
-                safeCoinPriceList.add(CoinPrice(SafeExtend.SAFE4_BEP20_COIN_UID, item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp / 1000))
-                if (SafeExtend.isSafe4TestNet) {
-                    safeCoinPriceList.add(CoinPrice("safe4-coin", "USD", BigDecimal("0"), BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
-                    safeCoinPriceList.add(CoinPrice("Safe4USDT", "USD", BigDecimal("0"), BigDecimal("0"), BigDecimal("0"), item.timestamp / 1000))
-                } else {
-                    safeCoinPriceList.add(CoinPrice("safe4-coin", item.currencyCode, item.value, item.diff24h, item.diff1d, item.timestamp / 1000))
-                }
-                manager.handleUpdated(safeCoinPriceList, currencyCode)
-                saveSafePrice(item.value.toString(), item.diff24h.toString(), item.diff1d.toString(), item.timestamp)
-            }
+
+        // Always persist Safe / Safe4 native price first (separate Safe API), even if HS fails.
+        persistSafePrices()
+
+        // Single Safe-family wallet: Safe API already covered prices — skip HS.
+        if (coinUids.size == 1 && coinUids[0].isSafeCoin()) {
             return
         }
 
-        val safePrice = if (isInit || isFirstLoad) {
+        // HS only for non-Safe uids (custom-safe4 / safe4-coin break HS query)
+        val hsUids = coinUids.filterNot { it.isSafeCoin() || it.startsWith("custom-") }
+        val priceList = mutableListOf<CoinPrice>()
+        if (hsUids.isNotEmpty()) {
+            try {
+                val marketPrices = provider.getCoinPrices(hsUids, currencyCode)
+                marketPrices.findLast { it.coinUid.lowercase() == "tether" }?.let {
+                    val ts = normalizeUnixSeconds(it.timestamp)
+                    // Keep USDT peg for Safe4USDT on mainnet; testnet zeroes in persistSafePrices
+                    if (!SafeExtend.isSafe4TestNet) {
+                        priceList.add(
+                            CoinPrice("Safe4USDT", it.currencyCode, it.value, it.diff24h, it.diff1d, ts)
+                        )
+                    }
+                }
+                priceList.addAll(marketPrices)
+            } catch (_: Exception) {
+                // Safe prices already persisted; HS failure must not wipe Safe4 native price
+            }
+        }
+        if (priceList.isNotEmpty()) {
+            handle(priceList)
+        }
+    }
+
+    /**
+     * Fan-out safewallet.anwang.com/v1/coins?uids=safe-anwang into safe-coin / safe4-coin / bridges.
+     * Native Safe4 always gets the live market price (same as BEP20/ERC20 SAFE).
+     */
+    private suspend fun persistSafePrices() {
+        val safePrice = fetchSafePrice() ?: return
+        // Safe API last_updated is often hours old; use "now" so CoinPrice.expired is false
+        val apiTs = normalizeUnixSeconds(safePrice.timestamp)
+        val now = System.currentTimeMillis() / 1000
+        val ts = if (now - apiTs > CoinPrice.expirationInterval) now else apiTs
+        val value = safePrice.value
+        val diff24h = safePrice.diff24h
+        val diff1d = safePrice.diff1d
+        val code = safePrice.currencyCode.ifBlank { currencyCode }
+
+        val list = mutableListOf(
+            CoinPrice("safe-coin", code, value, diff24h, diff1d, ts),
+            CoinPrice("safe4-coin", code, value, diff24h, diff1d, ts),
+            CoinPrice(SafeExtend.SAFE4_ERC_COIN_UID, code, value, diff24h, diff1d, ts),
+            CoinPrice(SafeExtend.SAFE4_MATIC_COIN_UID, code, value, diff24h, diff1d, ts),
+            CoinPrice(SafeExtend.SAFE4_BEP20_COIN_UID, code, value, diff24h, diff1d, ts),
+        )
+        if (SafeExtend.isSafe4TestNet) {
+            // Only zero Safe4USDT on testnet; native SAFE keeps market price for fiat display
+            list.add(CoinPrice("Safe4USDT", code, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, ts))
+        }
+
+        manager.handleUpdated(list, currencyCode)
+        saveSafePrice(
+            value.toPlainString(),
+            diff24h?.toPlainString() ?: "0",
+            diff1d?.toPlainString() ?: "0",
+            ts
+        )
+    }
+
+    private suspend fun fetchSafePrice(): CoinPrice? {
+        if (isInit || isFirstLoad) {
             if (!isInit) {
                 isFirstLoad = false
             }
             if (isInit) {
                 isInit = false
             }
-            listOf(getSafeCoinPrice())
-        } else {
-            try {
-                val price = provider.getSafeCoinPrices(listOf("safe-anwang"), coinUids, currencyCode)
-                if (price.isNotEmpty()) {
-                    saveSafePrice(price[0].value.toString(), price[0].diff24h.toString(), price[0].diff1d.toString(), price[0].timestamp)
-                }
-                price
-            } catch (e: Exception) {
-                emptyList()
+            // Prefer live Safe API even on first load; fall back to cache/default
+            return try {
+                provider.getSafeCoinPrices(listOf("safe-anwang"), currencyCode).firstOrNull()
+                    ?: getSafeCoinPrice()
+            } catch (_: Exception) {
+                getSafeCoinPrice()
             }
         }
-
-        val marketPrices = provider.getCoinPrices(allCoinUids, currencyCode)
-        val priceList = mutableListOf<CoinPrice>()
-        marketPrices.findLast {
-            it.coinUid.lowercase() == "tether"
-        }?.let {
-            priceList.add(CoinPrice("Safe4USDT", it.currencyCode, it.value, it.diff24h, it.diff1d, it.timestamp / 1000))
+        return try {
+            provider.getSafeCoinPrices(listOf("safe-anwang"), currencyCode).firstOrNull()
+                ?: getSafeCoinPrice()
+        } catch (_: Exception) {
+            // Keep writing safe4-coin from cache so native Safe4 never stays N/A
+            getSafeCoinPrice()
         }
-        safePrice.forEach {
-            priceList.add(it.copy(coinUid = "safe-coin"))
-            priceList.add(it.copy(coinUid = SafeExtend.SAFE4_ERC_COIN_UID))
-            priceList.add(it.copy(coinUid = SafeExtend.SAFE4_MATIC_COIN_UID))
-            priceList.add(it.copy(coinUid = SafeExtend.SAFE4_BEP20_COIN_UID))
-            if (SafeExtend.isSafe4TestNet) {
-                priceList.add(it.copy(coinUid = "safe4-coin", currencyCode = "USD", value = BigDecimal("0"), diff24h = BigDecimal("0")))
-                priceList.add(it.copy(coinUid = "Safe4USDT", currencyCode = "USD", value = BigDecimal("0"), diff24h = BigDecimal("0")))
-            } else {
-                priceList.add(it.copy(coinUid = "safe4-coin"))
-            }
-        }
-        priceList.addAll(marketPrices)
-        handle(priceList)
     }
 
     private val allCoinUids: List<String>
@@ -130,9 +157,14 @@ class CoinPriceSchedulerProvider(
     }
 
     private fun getSafeCoinPrice(): CoinPrice {
-        return manager.coinPrice("safe-coin", "USD")
+        return manager.coinPrice("safe-coin", currencyCode)
+            ?: manager.coinPrice("safe-coin", "USD")
             ?: getDefaultSafePrice()
     }
+
+    /** Accept either unix seconds or millis from Safe / HS APIs. */
+    private fun normalizeUnixSeconds(timestamp: Long): Long =
+        if (timestamp > 10_000_000_000L) timestamp / 1000 else timestamp
 
     private fun saveSafePrice(price: String, diff: String, diff1d: String, time: Long) {
         val sp = MarketDatabase.application?.getSharedPreferences("safe_price.xml", Context.MODE_PRIVATE) ?: return
@@ -151,12 +183,15 @@ class CoinPriceSchedulerProvider(
         val diff1d = sp?.getString("diff1d", "-6.42345300") ?: "-6.42345300"
         val time = sp?.getLong("time", (System.currentTimeMillis() - 24 * 60 * 60 * 1000) / 1000)
             ?: ((System.currentTimeMillis() - 24 * 60 * 60 * 1000) / 1000)
+        val priceBd = price.toBigDecimalOrNull() ?: BigDecimal("3.28741459")
+        val diffBd = diff.toBigDecimalOrNull() ?: BigDecimal.ZERO
+        val diff1dBd = diff1d.toBigDecimalOrNull() ?: BigDecimal.ZERO
         return CoinPrice(
-            "safe-coin", "USD",
-            BigDecimal(price),
-            BigDecimal(diff),
-            BigDecimal(diff1d),
-            time
+            "safe-coin", currencyCode,
+            priceBd,
+            diffBd,
+            diff1dBd,
+            normalizeUnixSeconds(time)
         )
     }
 }

@@ -658,7 +658,11 @@ class MarketKit(
 
     fun insertCoin(coin: Coin) = coinManager.insertCoin(coin)
 
-    fun saveCoinPrice(prices: List<CoinPrice>) = coinPriceManager.handleUpdated(prices, "USD")
+    fun saveCoinPrice(prices: List<CoinPrice>) {
+        if (prices.isEmpty()) return
+        // Notify observers for the currency actually stored (not hard-coded USD)
+        coinPriceManager.handleUpdated(prices, prices.first().currencyCode)
+    }
 
     suspend fun getStocks(currencyCode: String): List<Stock> {
         return hsProvider.getStocks(currencyCode)

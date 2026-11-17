@@ -542,7 +542,6 @@ class HsProvider(baseUrl: String, apiKey: String) {
 
     suspend fun getSafeCoinPrices(
         coinUids: List<String>,
-        walletCoinUids: List<String>,
         currencyCode: String
     ): List<CoinPrice> {
         return safeService.getCoinPrices(
