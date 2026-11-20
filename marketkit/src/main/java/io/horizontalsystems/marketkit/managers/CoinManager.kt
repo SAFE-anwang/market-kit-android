@@ -90,6 +90,8 @@ class CoinManager(
 
     fun insertCoin(coin: Coin) = storage.insertCoin(coin)
 
+    fun ensureSafeFourUsdt() = storage.ensureSafeFourUsdt()
+
 
     /*fun marketInfosSingle(coinUids: List<String>, currencyCode: String): Single<List<MarketInfo>> {
         // 获取Safe币价格

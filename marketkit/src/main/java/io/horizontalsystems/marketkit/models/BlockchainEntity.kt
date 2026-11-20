@@ -17,6 +17,11 @@ data class BlockchainEntity(
 ) {
 
     val blockchain: Blockchain
-        get() = Blockchain(BlockchainType.fromUid(uid), name, eip3091url)
+        get() {
+            val type = BlockchainType.fromUid(uid)
+            // Always surface Safe4 chain as "SAFE" in UI, even if older DB rows still say "Safe4".
+            val displayName = if (type == BlockchainType.SafeFour) "SAFE" else name
+            return Blockchain(type, displayName, eip3091url)
+        }
 
 }

@@ -656,6 +656,8 @@ class MarketKit(
     fun insertTokenEntity(tokenEntity: TokenEntity) = coinManager.insertTokenEntity(tokenEntity)
     fun removeTokenEntity(coinUid: String, reference: String) = coinManager.removeTokenEntity(coinUid, reference)
 
+    fun ensureSafeFourUsdt() = coinManager.ensureSafeFourUsdt()
+
     fun insertCoin(coin: Coin) = coinManager.insertCoin(coin)
 
     fun saveCoinPrice(prices: List<CoinPrice>) {

@@ -14,9 +14,11 @@ data class TopPlatformResponse(
 ) {
 
     val topPlatform: TopPlatform
-        get() =
-            TopPlatform(
-                Blockchain(BlockchainType.fromUid(uid), name, null),
+        get() {
+            val type = BlockchainType.fromUid(uid)
+            val displayName = if (type == BlockchainType.SafeFour) "SAFE" else name
+            return TopPlatform(
+                Blockchain(type, displayName, null),
                 rank,
                 protocols,
                 marketCap,
@@ -27,5 +29,6 @@ data class TopPlatformResponse(
                 stats["change_1m"],
                 stats["change_3m"],
             )
+        }
 
 }

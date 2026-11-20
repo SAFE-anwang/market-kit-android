@@ -1,6 +1,7 @@
 package io.horizontalsystems.marketkit.storage
 
 import androidx.sqlite.db.SimpleSQLiteQuery
+import io.horizontalsystems.marketkit.SafeExtend
 import io.horizontalsystems.marketkit.models.Blockchain
 import io.horizontalsystems.marketkit.models.BlockchainEntity
 import io.horizontalsystems.marketkit.models.BlockchainType
@@ -189,7 +190,6 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
 
             // insert safe
             val safeCoin = Coin("safe-coin", "SAFE", "SAFE",0,"safe-anwang", "")
-            // Display as SAFE + "Safe4" badge (not SAFE4 code, which hid the badge via noBadgeCoinCodes)
             val safe4Coin = Coin("safe4-coin", "SAFE", "SAFE",0,"safe-anwang", "")
             val safe4USDTCoin = Coin("Safe4USDT", "SAFE", "USDT",0,"safe-anwang", "")
 //            val safeErc = Coin("safe-coin", "SAFE", "SAFE",20,"safe-anwang")
@@ -201,7 +201,7 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
 //            coinDao.insert(safeBep)
 
                 val safeErcBlockchain = BlockchainEntity("safe-coin", "SAFE",null)
-                val safe4Blockchain = BlockchainEntity("safe4-coin", "Safe4",null)
+                val safe4Blockchain = BlockchainEntity("safe4-coin", "SAFE",null)
     //            val safeBepBlockchain = BlockchainEntity("custom_safe-bep20-SAFE", "Safe",null)
                 coinDao.insert(safeErcBlockchain)
                 coinDao.insert(safe4Blockchain)
@@ -213,7 +213,13 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
                 val safeBepToken = TokenEntity("safe-coin", "binance-smart-chain","eip20", 18, "0x4d7fa587ec8e50bd0e9cd837cb4da796f47218a1")
                 val safeMaticToken = TokenEntity("safe-coin", "polygon-pos","eip20", 18, "0xb7dd19490951339fe65e341df6ec5f7f93ff2779")
                 val safeSafe4Token2 = TokenEntity("safe4-coin", "safe4-coin","eip20", 18, "0x0000000000000000000000000000000000001101")
-                val safe4TUSDToken = TokenEntity("Safe4USDT", "safe4-coin","eip20", 6, "0x9c1246a4bb3c57303587e594a82632c3171662c9")
+                val safe4TUSDToken = TokenEntity(
+                    "Safe4USDT",
+                    "safe4-coin",
+                    "eip20",
+                    6,
+                    SafeExtend.currentSafe4UsdtAddress
+                )
 
                 coinDao.insert(safeToken)
                 coinDao.insert(safe4Token)
@@ -233,10 +239,11 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
      * Ensure native Safe4 coin / blockchain / token always exist.
      * HS dumps can wipe tokens; without the native TokenEntity,
      * getBaseToken(SafeFour) is null → no transactions adapter.
+     * Also keeps Safe4USDT on the contract that matches current mainnet/testnet.
      */
     fun ensureSafeFourDisplay() {
         coinDao.insert(Coin("safe4-coin", "SAFE", "SAFE", 0, "safe-anwang", ""))
-        coinDao.insert(BlockchainEntity("safe4-coin", "Safe4", null))
+        coinDao.insert(BlockchainEntity("safe4-coin", "SAFE", null))
         coinDao.insert(TokenEntity("safe4-coin", "safe4-coin", "native", 18, ""))
         coinDao.insert(
             TokenEntity(
@@ -246,6 +253,25 @@ class CoinStorage(val marketDatabase: MarketDatabase) {
                 18,
                 "0x0000000000000000000000000000000000001101"
             )
+        )
+        ensureSafeFourUsdt()
+    }
+
+    /**
+     * Point Safe4USDT at the current network's contract.
+     * PK includes [reference], so remove the other network's row first.
+     */
+    fun ensureSafeFourUsdt() {
+        val current = SafeExtend.currentSafe4UsdtAddress
+        val other = if (SafeExtend.isSafe4TestNet) {
+            SafeExtend.SAFE4_USDT_ADDRESS
+        } else {
+            SafeExtend.SAFE4_USDT_TESTNET_ADDRESS
+        }
+        coinDao.insert(Coin("Safe4USDT", "SAFE", "USDT", 0, "safe-anwang", ""))
+        coinDao.removeToken("Safe4USDT", other)
+        coinDao.insert(
+            TokenEntity("Safe4USDT", "safe4-coin", "eip20", 6, current)
         )
     }
 

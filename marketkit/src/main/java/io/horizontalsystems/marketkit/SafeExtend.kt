@@ -64,9 +64,19 @@ object SafeExtend {
         return this.uid == "safe4-coin" || this.uid == "custom-safe4-coin" || this.uid == "Safe4USDT"
     }
 
+    /** Mainnet Safe4-USDT (safe4.anwang.com). */
+    const val SAFE4_USDT_ADDRESS = "0x9c1246a4bb3c57303587e594a82632c3171662c9"
+
+    /** Testnet Safe4-USDT (safe4testnet.anwang.com). */
+    const val SAFE4_USDT_TESTNET_ADDRESS = "0x5a9187804ae46c9809696a9c64c7d3d42307fef3"
+
+    val currentSafe4UsdtAddress: String
+        get() = if (isSafe4TestNet) SAFE4_USDT_TESTNET_ADDRESS else SAFE4_USDT_ADDRESS
+
     fun isSafeUsdt(contract: String?): Boolean {
-        return if (contract == null) false
-        else contract == "0x9c1246a4bb3c57303587e594a82632c3171662c9"
+        if (contract == null) return false
+        return contract.equals(SAFE4_USDT_ADDRESS, ignoreCase = true)
+                || contract.equals(SAFE4_USDT_TESTNET_ADDRESS, ignoreCase = true)
     }
 
     fun getCoinCode(code: String, contract: String? = null): String {
