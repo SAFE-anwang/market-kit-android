@@ -90,6 +90,8 @@ class CoinManager(
 
     fun insertCoin(coin: Coin) = storage.insertCoin(coin)
 
+    fun deleteCoin(coinUid: String) = storage.deleteCoin(coinUid)
+
     fun ensureSafeFourUsdt() = storage.ensureSafeFourUsdt()
 
 

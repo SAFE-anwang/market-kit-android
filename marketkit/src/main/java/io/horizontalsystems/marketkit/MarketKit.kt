@@ -660,6 +660,8 @@ class MarketKit(
 
     fun insertCoin(coin: Coin) = coinManager.insertCoin(coin)
 
+    fun deleteCoin(coinUid: String) = coinManager.deleteCoin(coinUid)
+
     fun saveCoinPrice(prices: List<CoinPrice>) {
         if (prices.isEmpty()) return
         // Notify observers for the currency actually stored (not hard-coded USD)
